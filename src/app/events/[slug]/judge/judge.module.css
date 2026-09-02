@@ -1,0 +1,481 @@
+.container {
+  padding-bottom: var(--spacing-section);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-xl);
+  gap: var(--spacing-lg);
+  flex-wrap: wrap;
+}
+
+.title {
+  font-size: clamp(24px, 3.5vw, 40px);
+  font-weight: 700;
+  letter-spacing: -1.5px;
+  color: var(--color-ink);
+  line-height: 1.1;
+}
+
+.subtitle {
+  font-size: 15px;
+  color: var(--color-ink-muted);
+  margin-top: 4px;
+}
+
+.roundSelect {
+  padding: 10px 14px;
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--rounded-md);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 14px;
+  cursor: pointer;
+  min-width: 220px;
+}
+
+/* Stats */
+.statsCard {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--rounded-xl);
+  padding: var(--spacing-lg) var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
+}
+
+.statsRow {
+  display: flex;
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.statVal {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  color: var(--color-ink);
+}
+
+.valGreen { color: var(--color-success); }
+.valYellow { color: var(--color-warning); }
+
+.statLabel {
+  font-size: 12px;
+  color: var(--color-ink-muted);
+}
+
+.progressBar {
+  width: 100%;
+  height: 8px;
+  background: var(--color-hairline-soft);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-accent), var(--color-success));
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+/* Banners */
+.warningBanner {
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  color: var(--color-warning);
+  border-radius: var(--rounded-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: 14px;
+  margin-bottom: var(--spacing-lg);
+}
+
+.undoBanner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  color: var(--color-success);
+  border-radius: var(--rounded-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: 14px;
+  margin-bottom: var(--spacing-lg);
+}
+
+.undoBtn {
+  padding: 6px 14px;
+  background: rgba(52, 211, 153, 0.15);
+  color: var(--color-success);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  border-radius: var(--rounded-pill);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Evaluation Sheet Modal */
+.evalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-lg);
+}
+
+.evalModal {
+  background: var(--color-canvas);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--rounded-xxl);
+  padding: var(--spacing-xl);
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.evalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.evalTitle {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--color-ink);
+}
+
+.evalClose {
+  width: 32px;
+  height: 32px;
+  background: var(--color-surface-1);
+  border: none;
+  border-radius: var(--rounded-full);
+  color: var(--color-ink);
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.criteriaList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+}
+
+.criterionRow {
+  padding: var(--spacing-md);
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--rounded-md);
+}
+
+.criterionInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.criterionName {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.criterionMax {
+  font-size: 13px;
+  color: var(--color-ink-muted);
+}
+
+.quickTap {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tapBtn {
+  width: 40px;
+  height: 40px;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--rounded-md);
+  color: var(--color-ink-muted);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.tapBtnActive {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #ffffff;
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.stepBtn {
+  width: 36px;
+  height: 36px;
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--rounded-md);
+  color: var(--color-ink);
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stepVal {
+  font-size: 22px;
+  font-weight: 700;
+  min-width: 36px;
+  text-align: center;
+  color: var(--color-ink);
+}
+
+.submitBtn {
+  width: 100%;
+  padding: 14px;
+  background: var(--color-inverse-canvas);
+  color: var(--color-on-primary);
+  border: none;
+  border-radius: var(--rounded-pill);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+.submitBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Tabs */
+.tabRow {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+  border-bottom: 1px solid var(--color-hairline-soft);
+  padding-bottom: var(--spacing-sm);
+}
+
+.tabBtn {
+  padding: 10px 20px;
+  background: transparent;
+  color: var(--color-ink-muted);
+  border: none;
+  border-radius: var(--rounded-pill);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.tabBtn:hover { background: var(--glass-bg); color: var(--color-ink); }
+.tabActive { background: var(--color-inverse-canvas) !important; color: var(--color-on-primary) !important; }
+
+/* Scanner */
+.scanWrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.scanCard {
+  width: 100%;
+  max-width: 480px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--rounded-xl);
+  padding: var(--spacing-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.scanControls {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.startBtn {
+  padding: 12px 28px;
+  background: var(--color-inverse-canvas);
+  color: var(--color-on-primary);
+  border: none;
+  border-radius: var(--rounded-pill);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.stopBtn {
+  padding: 10px 24px;
+  background: var(--color-error);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--rounded-pill);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cameraBox {
+  width: 100%;
+  min-height: 280px;
+  background: var(--color-canvas);
+  border: 2px dashed var(--color-hairline);
+  border-radius: var(--rounded-lg);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cameraPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xl);
+  text-align: center;
+  color: var(--color-ink-muted);
+  font-size: 14px;
+}
+
+.feedback {
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--rounded-md);
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+}
+
+.feedbackSuccess { background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.25); color: var(--color-success); }
+.feedbackWarning { background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.25); color: var(--color-warning); }
+.feedbackError { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.25); color: var(--color-error); }
+
+/* Roster */
+.rosterWrapper {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--rounded-xl);
+  padding: var(--spacing-xl);
+}
+
+.searchInput {
+  width: 100%;
+  padding: 12px var(--spacing-md);
+  background: var(--color-canvas);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--rounded-md);
+  color: var(--color-ink);
+  font-size: 15px;
+  outline: none;
+  margin-bottom: var(--spacing-lg);
+  font-family: var(--font-body);
+}
+
+.searchInput:focus { border-color: var(--color-accent); }
+
+.rosterList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.rosterRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--rounded-md);
+}
+
+.rosterInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rosterName {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.rosterDesk {
+  font-size: 12px;
+  color: var(--color-accent);
+}
+
+.rosterActions {
+  display: flex;
+  align-items: center;
+}
+
+.evaluatedBadge {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-success);
+  background: rgba(52,211,153,0.1);
+  padding: 6px 12px;
+  border-radius: var(--rounded-pill);
+  border: 1px solid rgba(52,211,153,0.25);
+}
+
+.evalBtn {
+  padding: 8px 18px;
+  background: var(--color-inverse-canvas);
+  color: var(--color-on-primary);
+  border: none;
+  border-radius: var(--rounded-pill);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+.evalBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .evalModal { padding: var(--spacing-lg); }
+}

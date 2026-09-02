@@ -1,0 +1,109 @@
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: 56px;
+  background: var(--color-canvas);
+  border-bottom: 1px solid var(--color-hairline-soft);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.logo {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.logo:hover {
+  opacity: 1;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.userSection {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.navLink {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-ink-muted);
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: var(--rounded-pill);
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+
+.navLink:hover {
+  color: var(--color-ink);
+  background: var(--glass-bg);
+  opacity: 1;
+}
+
+.userMenu {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--rounded-full);
+  border: 1px solid var(--color-hairline);
+}
+
+.signOutBtn {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-ink-muted);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  padding: 6px 14px;
+  border-radius: var(--rounded-pill);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.signOutBtn:hover {
+  background: var(--glass-bg-hover);
+  color: var(--color-ink);
+}
+
+.signInBtn {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-on-primary);
+  background: var(--color-inverse-canvas);
+  padding: 8px 18px;
+  border-radius: var(--rounded-pill);
+  text-decoration: none;
+  transition: opacity var(--transition-fast);
+}
+
+.signInBtn:hover {
+  opacity: 0.9;
+}
+
+@media (max-width: 810px) {
+  .navLink {
+    display: none;
+  }
+}

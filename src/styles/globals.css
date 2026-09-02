@@ -1,0 +1,151 @@
+@import "./tokens.css";
+
+/* ============================================
+   Global Styles
+   ============================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-body);
+  font-feature-settings: var(--font-features);
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  line-height: 1.3;
+  letter-spacing: -0.15px;
+  min-height: 100vh;
+  transition: background-color var(--transition-slow),
+    color var(--transition-slow);
+}
+
+/* --- Typography --- */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  line-height: 1;
+}
+
+h1 {
+  font-size: clamp(32px, 8vw, 85px);
+  letter-spacing: -4.25px;
+  line-height: 0.95;
+}
+
+h2 {
+  font-size: clamp(24px, 5vw, 62px);
+  letter-spacing: -3.1px;
+  line-height: 1;
+}
+
+h3 {
+  font-size: clamp(20px, 3vw, 32px);
+  letter-spacing: -1px;
+  line-height: 1.13;
+}
+
+h4 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.8px;
+  line-height: 1.2;
+}
+
+p {
+  font-size: 15px;
+  line-height: 1.3;
+  letter-spacing: -0.15px;
+  color: var(--color-ink-muted);
+}
+
+a {
+  color: var(--color-accent);
+  text-decoration: none;
+  transition: opacity var(--transition-fast);
+}
+
+a:hover {
+  opacity: 0.8;
+}
+
+/* --- Focus --- */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+/* --- Selection --- */
+::selection {
+  background-color: var(--color-accent-soft);
+  color: var(--color-ink);
+}
+
+/* --- Scrollbar (Night mode) --- */
+[data-theme="night"] ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+[data-theme="night"] ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-theme="night"] ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: var(--rounded-pill);
+}
+
+[data-theme="night"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* --- Scrollbar (Day mode) --- */
+[data-theme="day"] ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+[data-theme="day"] ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-theme="day"] ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: var(--rounded-pill);
+}
+
+[data-theme="day"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* --- Utility --- */
+.container {
+  max-width: var(--container-max);
+  margin-inline: auto;
+  padding-inline: var(--container-padding);
+}
+
+/* --- Theme transition --- */
+html[data-theme] * {
+  transition: background-color var(--transition-slow),
+    color var(--transition-slow),
+    border-color var(--transition-slow),
+    box-shadow var(--transition-slow);
+}

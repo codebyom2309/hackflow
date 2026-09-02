@@ -1,0 +1,115 @@
+﻿this is just as min referernce we should have for databses in this project
+Relational Database Architecture
+This PostgreSQL-compatible schema is designed to prevent race conditions during registration, strictly isolate participant credentials from organizer data, and efficiently calculate multi-round averages.
+1. Authentication & Core Entities
+* Strict Isolation: Organizers and Participants are split into entirely separate tables to ensure security and clean session management.
+* Role-Based Access: Coordinators and Judges exist within an event_staff table, relying on unique access tokens (the generated links) tied to specific events.
+2. Logistics & Concurrency
+* Row-Level Locking Base: The desks table uses an is_allotted boolean, enabling the SELECT ... FOR UPDATE SKIP LOCKED query during the high-concurrency registration phase.
+* Pre-Allotment Mapping: Teams map directly to a desk_id, allowing instant O(1) lookups during the physical QR check-in.
+3. Dynamic Registration & Rounds
+* JSONB Flexibility: The events.form_schema column utilizes JSONB to store the dynamic native builder configurations.
+* Round State: A dedicated rounds table tracks the active phase, holding the specific problem statements and linking to distinct judging criteria.
+4. The Judgement Matrix
+* Duplicate Prevention: A composite unique index on judgement_scores strictly prevents a judge from submitting multiple sheets for the same team in the same round.
+* Efficient Aggregation: The schema structure natively supports rapid GROUP BY team_id queries to calculate normalized averages across all active judges in real-time.
+-- 1. AUTHENTICATION & USERS  
+CREATE TABLE organizers (
+   id SERIAL PRIMARY KEY,
+   email VARCHAR UNIQUE NOT NULL,
+   password_hash VARCHAR NOT NULL
+);
+
+CREATE TABLE participants (
+   id SERIAL PRIMARY KEY,
+   email VARCHAR UNIQUE NOT NULL,
+   password_hash VARCHAR NOT NULL
+);
+
+CREATE TABLE event_staff (
+   id SERIAL PRIMARY KEY,
+   event_id INT NOT NULL, -- FK to events
+   role VARCHAR NOT NULL, -- 'JUDGE' or 'COORDINATOR'
+   name VARCHAR,
+   access_token VARCHAR UNIQUE NOT NULL
+);
+
+-- 2. EVENTS & REGISTRATION
+CREATE TABLE events (
+   id SERIAL PRIMARY KEY,
+   organizer_id INT REFERENCES organizers(id),
+   name VARCHAR NOT NULL,
+   form_schema JSONB, 
+   active_round INT DEFAULT 1
+);
+
+-- 3. LOGISTICS & VENUE
+CREATE TABLE rooms (
+   id SERIAL PRIMARY KEY,
+   event_id INT REFERENCES events(id),
+   name VARCHAR NOT NULL
+);
+
+CREATE TABLE desks (
+   id SERIAL PRIMARY KEY,
+   room_id INT REFERENCES rooms(id),
+   desk_number VARCHAR NOT NULL,
+   capacity INT NOT NULL,
+   is_allotted BOOLEAN DEFAULT FALSE
+);
+
+-- 4. TEAMS & ATTENDANCE
+CREATE TABLE teams (
+   id SERIAL PRIMARY KEY,
+   event_id INT REFERENCES events(id),
+   leader_id INT REFERENCES participants(id),
+   name VARCHAR NOT NULL,
+   member_count INT NOT NULL,
+   qr_token VARCHAR UNIQUE NOT NULL,
+   desk_id INT REFERENCES desks(id), -- Maps directly for instant check-in
+   attended BOOLEAN DEFAULT FALSE,
+   status VARCHAR DEFAULT 'ALLOTTED' -- 'ALLOTTED' or 'WAITLISTED'
+);
+
+CREATE TABLE team_members (
+   id SERIAL PRIMARY KEY,
+   team_id INT REFERENCES teams(id),
+   name VARCHAR NOT NULL,
+   email VARCHAR NOT NULL
+);
+
+-- 5. ROUNDS & SUBMISSIONS
+CREATE TABLE rounds (
+   id SERIAL PRIMARY KEY,
+   event_id INT REFERENCES events(id),
+   round_number INT NOT NULL,
+   problem_statements JSONB
+);
+
+CREATE TABLE submissions (
+   id SERIAL PRIMARY KEY,
+   team_id INT REFERENCES teams(id),
+   round_id INT REFERENCES rounds(id),
+   github_link VARCHAR,
+   ppt_url VARCHAR
+);
+
+-- 6. DYNAMIC JUDGEMENT ENGINE
+CREATE TABLE evaluation_criteria (
+   id SERIAL PRIMARY KEY,
+   round_id INT REFERENCES rounds(id),
+   name VARCHAR NOT NULL,
+   max_points INT NOT NULL
+);
+
+CREATE TABLE judgement_scores (
+   id SERIAL PRIMARY KEY,
+   team_id INT REFERENCES teams(id),
+   judge_id INT REFERENCES event_staff(id),
+   round_id INT REFERENCES rounds(id),
+   criteria_id INT REFERENCES evaluation_criteria(id),
+   score INT NOT NULL,
+   UNIQUE(team_id, judge_id, round_id, criteria_id) -- Prevents duplicate scoring
+);
+
+Are you planning to use an ORM like Prisma or Drizzle to manage this schema within your application, or will you be writing raw SQL queries to explicitly handle the high-concurrency locking logic?

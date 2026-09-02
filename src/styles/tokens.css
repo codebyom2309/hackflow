@@ -1,0 +1,144 @@
+/* ============================================
+   HackFlow Design System — CSS Tokens
+   ============================================ */
+
+:root {
+  /* --- Spacing (5px base) --- */
+  --spacing-hair: 1px;
+  --spacing-xxs: 4px;
+  --spacing-xs: 8px;
+  --spacing-sm: 12px;
+  --spacing-md: 15px;
+  --spacing-lg: 20px;
+  --spacing-xl: 30px;
+  --spacing-xxl: 40px;
+  --spacing-section: 96px;
+
+  /* --- Border Radius --- */
+  --rounded-xs: 4px;
+  --rounded-sm: 6px;
+  --rounded-md: 10px;
+  --rounded-lg: 15px;
+  --rounded-xl: 20px;
+  --rounded-xxl: 30px;
+  --rounded-pill: 100px;
+  --rounded-full: 9999px;
+
+  /* --- Typography --- */
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+  --font-display: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, sans-serif;
+
+  /* Font features for Inter Variable */
+  --font-features: "cv01", "cv05", "cv09", "cv11", "ss03", "ss07", "dlig";
+
+  /* --- Transitions --- */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* --- Container --- */
+  --container-max: 1199px;
+  --container-padding: var(--spacing-xl);
+}
+
+/* ============================================
+   Night Theme (Default) — Glassmorphism
+   ============================================ */
+[data-theme="night"] {
+  /* Surface colors */
+  --color-canvas: #0a0a0b;
+  --color-surface-1: #16161a;
+  --color-surface-2: #242429;
+  --color-inverse-canvas: #ffffff;
+
+  /* Text colors */
+  --color-ink: #ffffff;
+  --color-ink-muted: #999999;
+  --color-on-primary: #0a0a0b;
+
+  /* Accent */
+  --color-accent: #0099ff;
+  --color-accent-soft: rgba(0, 153, 255, 0.15);
+
+  /* Borders */
+  --color-hairline: rgba(255, 255, 255, 0.12);
+  --color-hairline-soft: rgba(255, 255, 255, 0.06);
+
+  /* Semantic */
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-error: #f87171;
+
+  /* Gradients */
+  --gradient-violet: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #6d28d9 100%);
+  --gradient-magenta: linear-gradient(135deg, #ec4899 0%, #f472b6 50%, #db2777 100%);
+  --gradient-orange: linear-gradient(135deg, #f97316 0%, #fb923c 50%, #ea580c 100%);
+  --gradient-coral: linear-gradient(135deg, #fb7185 0%, #fda4af 50%, #f43f5e 100%);
+
+  /* Glassmorphism */
+  --glass-bg: rgba(255, 255, 255, 0.04);
+  --glass-bg-hover: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-blur: blur(20px);
+  --glass-shadow: 0px 10px 30px rgba(0, 0, 0, 0.25);
+
+  /* Elevation */
+  --shadow-sm: 0px 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0px 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0px 10px 30px rgba(0, 0, 0, 0.4);
+  --shadow-focus: 0px 0px 0px 2px rgba(0, 153, 255, 0.4);
+
+  color-scheme: dark;
+}
+
+/* ============================================
+   Day Theme — Skeuomorphism
+   ============================================ */
+[data-theme="day"] {
+  /* Surface colors */
+  --color-canvas: #f2f0eb;
+  --color-surface-1: #ffffff;
+  --color-surface-2: #eae8e3;
+  --color-inverse-canvas: #1a1a1a;
+
+  /* Text colors */
+  --color-ink: #1a1a1a;
+  --color-ink-muted: #666666;
+  --color-on-primary: #ffffff;
+
+  /* Accent */
+  --color-accent: #0066cc;
+  --color-accent-soft: rgba(0, 102, 204, 0.1);
+
+  /* Borders */
+  --color-hairline: rgba(0, 0, 0, 0.12);
+  --color-hairline-soft: rgba(0, 0, 0, 0.06);
+
+  /* Semantic */
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --color-error: #dc2626;
+
+  /* Gradients */
+  --gradient-violet: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 50%, #7c3aed 100%);
+  --gradient-magenta: linear-gradient(135deg, #ec4899 0%, #f9a8d4 50%, #db2777 100%);
+  --gradient-orange: linear-gradient(135deg, #f97316 0%, #fdba74 50%, #ea580c 100%);
+  --gradient-coral: linear-gradient(135deg, #fb7185 0%, #fecdd3 50%, #f43f5e 100%);
+
+  /* Skeuomorphism */
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-bg-hover: rgba(255, 255, 255, 0.95);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-blur: blur(12px);
+  --glass-shadow: 0px 4px 16px rgba(0, 0, 0, 0.08);
+
+  /* Elevation */
+  --shadow-sm: 0px 1px 3px rgba(0, 0, 0, 0.08), 0px 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0px 4px 12px rgba(0, 0, 0, 0.08), 0px 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0px 8px 24px rgba(0, 0, 0, 0.10), 0px 4px 8px rgba(0, 0, 0, 0.04);
+  --shadow-focus: 0px 0px 0px 2px rgba(0, 102, 204, 0.3);
+
+  color-scheme: light;
+}

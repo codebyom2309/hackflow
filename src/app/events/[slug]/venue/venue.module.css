@@ -1,0 +1,241 @@
+.wrapper { padding-bottom: var(--spacing-section); }
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-xl);
+  gap: var(--spacing-lg);
+  flex-wrap: wrap;
+}
+.title { font-size: clamp(24px, 3.5vw, 42px); font-weight: 700; letter-spacing: -2px; line-height: 1; }
+.subtitle { margin-top: var(--spacing-xs); font-size: 14px; color: var(--color-ink-muted); }
+.headerActions { display: flex; gap: var(--spacing-sm); flex-shrink: 0; }
+
+.addRoomBtn, .autoAllotBtn {
+  padding: 10px 18px;
+  border: none;
+  border-radius: var(--rounded-pill);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+.addRoomBtn { background: var(--color-inverse-canvas); color: var(--color-on-primary); }
+.autoAllotBtn {
+  background: var(--glass-bg);
+  color: var(--color-ink);
+  border: 1px solid var(--glass-border);
+}
+.addRoomBtn:hover, .autoAllotBtn:hover { opacity: 0.9; }
+.addRoomBtn:active, .autoAllotBtn:active { transform: scale(0.97); }
+.autoAllotBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Stats Row */
+.statsRow {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+  overflow-x: auto;
+  padding-bottom: var(--spacing-xs);
+}
+.statCard {
+  flex: 1;
+  min-width: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: var(--spacing-md) var(--spacing-sm);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--rounded-lg);
+  backdrop-filter: var(--glass-blur);
+}
+.statValue { font-size: 28px; font-weight: 700; letter-spacing: -1.5px; }
+.statLabel { font-size: 12px; color: var(--color-ink-muted); }
+.statGreen { color: var(--color-success); }
+.statRed { color: var(--color-error); }
+
+/* Room Grid */
+.roomGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+}
+.roomCard {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  padding: var(--spacing-md);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--rounded-lg);
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+  font-family: var(--font-body);
+  width: 100%;
+}
+.roomCard:hover { background: var(--glass-bg-hover); transform: translateY(-1px); }
+.roomCardActive { border-color: var(--color-accent); background: var(--color-accent-soft); }
+.roomCardInactive { opacity: 0.5; }
+
+.roomHeader { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-sm); }
+.roomName { font-size: 15px; font-weight: 600; letter-spacing: -0.3px; }
+.roomStatus { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: var(--rounded-pill); }
+.roomActive { color: var(--color-success); background: rgba(52, 211, 153, 0.1); }
+.roomDisabled { color: var(--color-ink-muted); background: var(--glass-bg); }
+
+.occupancyBar {
+  width: 100%;
+  height: 6px;
+  background: var(--color-hairline-soft);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: var(--spacing-xs);
+}
+.occupancyFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-success), var(--color-accent));
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+.roomMeta { display: flex; justify-content: space-between; font-size: 12px; color: var(--color-ink-muted); }
+
+/* Desk Panel */
+.deskPanel {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--rounded-xl);
+  padding: var(--spacing-lg);
+  backdrop-filter: var(--glass-blur);
+}
+.deskPanelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+}
+.deskPanelTitle { font-size: 20px; font-weight: 600; letter-spacing: -0.8px; }
+.generateBtn {
+  padding: 8px 16px;
+  background: var(--color-surface-1);
+  color: var(--color-ink);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--rounded-pill);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+.generateBtn:hover { background: var(--color-surface-2); }
+
+.loading { text-align: center; padding: var(--spacing-xl); color: var(--color-ink-muted); font-size: 14px; }
+.emptyDesks { text-align: center; padding: var(--spacing-xl); color: var(--color-ink-muted); font-size: 14px; }
+
+/* Desk Grid */
+.deskGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: var(--spacing-sm);
+}
+.deskCell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: var(--spacing-sm);
+  border-radius: var(--rounded-md);
+  font-size: 12px;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  cursor: default;
+  min-height: 68px;
+}
+.deskCell:hover { transform: scale(1.05); box-shadow: var(--shadow-md); }
+.deskAvailable {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+  color: var(--color-success);
+}
+.deskFilled {
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  color: var(--color-error);
+}
+.deskNumber { font-weight: 700; font-size: 14px; }
+.deskCapacity { font-size: 10px; opacity: 0.7; }
+.deskTeam {
+  font-size: 10px;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-ink);
+}
+
+/* Modal (shared) */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100; padding: var(--spacing-lg);
+}
+.modal {
+  background: var(--color-surface-1);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--rounded-xxl);
+  padding: var(--spacing-xl);
+  width: 100%; max-width: 460px;
+  box-shadow: var(--shadow-lg);
+}
+.modalTitle { font-size: 22px; font-weight: 600; letter-spacing: -0.8px; margin-bottom: var(--spacing-lg); }
+.input {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--rounded-md);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.input:focus { border-color: var(--color-accent); box-shadow: var(--shadow-focus); }
+.input::placeholder { color: var(--color-ink-muted); }
+.formRow { display: flex; gap: var(--spacing-md); margin-bottom: var(--spacing-sm); }
+.formField { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.formLabel { font-size: 13px; font-weight: 500; color: var(--color-ink-muted); }
+.formHint { font-size: 13px; color: var(--color-ink-muted); margin-bottom: var(--spacing-md); }
+.modalActions { display: flex; justify-content: flex-end; gap: var(--spacing-sm); margin-top: var(--spacing-lg); }
+.cancelBtn {
+  padding: 10px 20px;
+  background: transparent; color: var(--color-ink-muted);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--rounded-pill);
+  font-family: var(--font-body); font-size: 14px; font-weight: 500; cursor: pointer;
+}
+.cancelBtn:hover { background: var(--glass-bg); }
+.submitBtn {
+  padding: 10px 20px;
+  background: var(--color-inverse-canvas); color: var(--color-on-primary);
+  border: none; border-radius: var(--rounded-pill);
+  font-family: var(--font-body); font-size: 14px; font-weight: 500; cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+.submitBtn:hover { opacity: 0.9; }
+.submitBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+@media (max-width: 810px) {
+  .header { flex-direction: column; }
+  .statsRow { flex-wrap: nowrap; }
+  .roomGrid { grid-template-columns: 1fr; }
+  .deskGrid { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); }
+}

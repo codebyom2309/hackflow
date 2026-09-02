@@ -1,0 +1,122 @@
+.card {
+  width: 100%;
+  max-width: 440px;
+  padding: var(--spacing-xxl) var(--spacing-xl);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--rounded-xxl);
+  box-shadow: var(--glass-shadow);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.badge {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 4px 12px;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  border-radius: var(--rounded-pill);
+  margin-bottom: var(--spacing-md);
+}
+
+.title {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  color: var(--color-ink);
+  margin-bottom: var(--spacing-xs);
+}
+
+.eventTitle {
+  font-size: 15px;
+  color: var(--color-ink-muted);
+  margin-bottom: var(--spacing-lg);
+}
+
+.roleBox {
+  width: 100%;
+  padding: var(--spacing-md);
+  background: var(--color-canvas);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--rounded-md);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.roleLabel {
+  font-size: 13px;
+  color: var(--color-ink-muted);
+}
+
+.roleValue {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
+.errorBox {
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  border-radius: var(--rounded-md);
+  color: var(--color-error);
+  font-size: 13px;
+  margin-bottom: var(--spacing-md);
+}
+
+.errorIcon {
+  font-size: 36px;
+  margin-bottom: var(--spacing-sm);
+}
+
+.desc {
+  font-size: 14px;
+  color: var(--color-ink-muted);
+  line-height: 1.5;
+  margin-bottom: var(--spacing-lg);
+}
+
+.actions {
+  width: 100%;
+}
+
+.acceptBtn {
+  width: 100%;
+  padding: 12px var(--spacing-lg);
+  background: var(--color-inverse-canvas);
+  color: var(--color-on-primary);
+  border: none;
+  border-radius: var(--rounded-pill);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+
+.acceptBtn:hover {
+  opacity: 0.9;
+}
+
+.acceptBtn:active {
+  transform: scale(0.98);
+}
+
+.secondaryBtn {
+  padding: 10px 20px;
+  background: var(--color-surface-1);
+  color: var(--color-ink);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--rounded-pill);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}

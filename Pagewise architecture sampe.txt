@@ -1,0 +1,348 @@
+﻿its just basi sample u have to understand it and include in implementation plan
+Judge page
+
+
+Here is the architectural flow and UI specification for the Judge POV, strictly mapping your logic into a highly efficient, mobile-optimized experience.
+Judge POV: Authentication & Dashboard
+ * Access Gate: Judges authenticate via their role-specific link, which instantly routes them to the primary scanning dashboard.
+ * Active Viewfinder: The home screen is dominated by a live camera feed, ready to instantly capture the participants' universal QR codes.
+The Scan & Confirmation Workflow
+ * Initial Verification: Upon a successful scan, the camera pauses and surfaces a confirmation modal displaying the Team Name and Team Leader Name.
+ * Cross-Evaluation Alert: If the database detects a prior submission from a different judge, the modal adds an alert (e.g., "Already evaluated by: Judge [Name]"), while keeping the "Confirm" button active so the current judge can add their independent score.
+ * Duplicate Prevention: If the system detects that this specific judge has already submitted a sheet for this team, the modal blocks entry, displaying "Already judged by you," and prompts them to scan another team.
+ * Routing: Pressing "Confirm" locks the team target and transitions the UI to the active evaluation sheet.
+Dynamic Evaluation Sheet UI
+ * Schema Loading: The page fetches the specific scoring parameters built by the organizer for the active round.
+ * Quick-Tap Buttons (Max 5 or less): For criteria capped at 5 points, the UI generates immediate touch targets (e.g., [1] [2] [3] [4] [5]), allowing a score to be logged in a single tap.
+ * Stepper Component (Max > 5): For higher ceilings, the UI dynamically switches to a quantity adjuster format with minus and plus buttons (- [Value] +).
+ * Intelligent Defaults: To minimize tap fatigue, the stepper logic automatically initializes the input value at exactly 50% of the maximum possible points, rounded to the nearest integer (e.g., a maximum of 15 defaults to 7).
+Submission & State Handling
+ * Commit Action: Pressing "Submit" dispatches the payload to the PostgreSQL database, instantly updating the organizer's live matrix.
+ * The Reset Loop: A final success popup confirms the submission and presents a "Scan Another" button, which clears the selected team state and re-initializes the camera viewfinder.
+Since a judge might accidentally tap a score and hit "Submit" prematurely, should the UI include a 5-second "Undo" toast notification, or will you rely strictly on the event organizer to manually correct mistaken scores from their dashboard?
+
+
+
+
+Here is the expanded technical specification for the Judge Dashboard, incorporating the hybrid manual roster and the context-aware sorting logic to minimize friction during the evaluation process.
+Judge Dashboard: The Hybrid Interface
+To provide maximum flexibility and reduce reliance purely on the camera, the Judge Dashboard mirrors the Volunteer split-screen layout but introduces intelligent sorting based on physical location.
+1. Split-Screen Layout & Status Tracking
+ * The Viewfinder: The top half of the UI remains the active QR scanner for instant team targeting.
+ * The Manual Roster: The bottom half features a scrollable list of all shortlisted teams in the current round.
+ * Live Status Badges: Each team row explicitly displays an evaluation status specific to that authenticated judge:
+   * Green Check/Badge: "Evaluated" (This judge has successfully submitted scores).
+   * Grey/Neutral Badge: "Pending" (This judge has not yet evaluated them).
+ * Manual Trigger: Next to "Pending" teams, a clear "Judge" button allows the user to tap and instantly open the evaluation sheet, entirely bypassing the camera scan if the QR code is unreadable or missing.
+2. Context-Aware "Smart Sorting" Logic
+This is a critical UX optimization. Because judges typically evaluate teams desk-by-desk within the same physical room, the roster automatically adapts its sorting based on the judge's real-world location.
+ * The Anchor Event: When a judge scans a QR code (or manually clicks "Judge" on a team), the frontend captures that team's specific room_no and stores it in the local state (e.g., activeRoomContext).
+ * Dynamic Reordering: Upon returning to the home screen after a successful submission, the manual roster automatically re-sorts. It hoists all remaining "Pending" teams that share the activeRoomContext to the very top of the list.
+ * Frictionless Progression: When the judge walks to the adjacent desk, they don't need to scan the next QR code or search the entire master list; the next team is already waiting at the top of their screen, ready for a single manual tap.
+3. Progressive Filtering
+ * Hide Evaluated: As a judge works through a room, teams marked as "Evaluated" by them should either drop to the absolute bottom of the list or be hidden behind a "Show Completed" toggle, keeping the active viewfinder clean and focused only on remaining tasks.
+If a judge clicks the manual "Judge" button but accidentally backs out of the scoring sheet before hitting submit, should the UI temporarily mark that team as a "Draft/In Progress" to prevent another judge from simultaneously evaluating them, or simply revert them to "Pending"?
+
+
+Volenteer Dashboard
+
+
+Here is the architectural layout and UI flow for the Volunteer (Coordinator) Dashboard, directly mapping to the structural flow from your wireframe (1000196381.jpg) and incorporating the physical assistance features.
+Volunteer (Coordinator) POV Flow
+This interface is designed for high-speed, mobile-first operation, ensuring volunteers can rapidly process the check-in queue and direct participants to their physical locations without navigating complex menus.
+1. Secure Onboarding & Authentication
+ * Role-Specific Entry: The volunteer clicks the unique "Coordinator Link" generated by the Organizer Dashboard.
+ * Sign-In Gate: If not already logged in, they are presented with a streamlined login screen (Google Sign-In).
+ * Contextual Routing: Upon authentication, the backend validates their coordinator token and routes them directly to the active event's Scanner Dashboard, completely bypassing the event creation/selection screens.
+2. The Main Scanner Dashboard (Split View)
+The primary screen is split into two distinct functional zones to maximize efficiency:
+ * Top Half (The Viewfinder): A persistent camera feed requesting immediate device camera permissions upon load. This acts as the continuous QR scanner.
+ * Bottom Half (The Roster): A scrollable list of all registered teams directly beneath the scanner.
+3. The Scan & Assist Workflow (QR Execution)
+When a volunteer scans a participant's master QR code (whether from a live screen or a downloaded image), the following sequence triggers instantly:
+ * Database Update: The backend executes the lightweight UPDATE teams SET attended = TRUE query.
+ * The Assistance Popup: A high-contrast modal instantly overlays the screen. It prominently displays:
+   * Team Name: (e.g., "Team Turbo")
+   * Room Number: (e.g., "Room A")
+   * Desk Number: (e.g., "Desk 12")
+ * Actionable Dismissal: The volunteer reads this information aloud to direct the participant, clicks "Dismiss" or "Next Scan," and the camera instantly resets for the next person in line.
+4. Manual Attendance & Master List
+To account for hardware failures, missing phones, or corrupted QR images, the bottom half of the dashboard serves as a manual fallback.
+ * Search & Filter: A quick-search bar to locate teams by "Team Name" or "Team Leader Name."
+ * Data Roster: The list displays every team alongside their Leader Name, pre-allotted Room Number, and Desk Number.
+ * Manual Check-In Toggle: A distinct button or checkbox next to each row allowing the volunteer to manually mark the team as "Attended." Triggering this visually grays out the row or moves it to an "Already Checked-In" section to prevent duplicate processing.
+If a volunteer scans a QR code for a team that has already been checked in by a different volunteer at another gate, should the scanner popup flash a specific warning color (like yellow or red) to alert them of a potential duplicate entry or shared QR code?
+
+
+Participant page(group leader side)
+
+
+Here is the technical specification and routing logic for the Participant Flow, ensuring Antigravity can build a seamless, edge-case-proof onboarding experience.
+1. Authentication & Smart Routing Engine
+This flow acts as the gatekeeper, determining exactly where a user should go based on their authentication status and the organizer's chosen registration method.
+ * Initial Link Click: The system checks the user's session.
+ * Unauthenticated State: The user is routed to the Participant Sign-In interface.
+ * Database Separation: Upon authentication, credentials and session data are routed to a dedicated participants table (or assigned a strict PARTICIPANT role), keeping them entirely isolated from the event organizers' database tables for security and access control.
+ * Authenticated, but Unregistered (Native Form): If the event uses the native builder and the user hasn't registered, they are routed directly to the custom Registration Form.
+ * Authenticated, but Unregistered (External/Google Form): If the event relies on external forms (meaning the database relies on the organizer's .xlsx upload) and the user's email is missing from the database, the system traps them in a specific Error/Info State. It displays: "No user registered with this email. Please fill out the Google Form again or contact the event coordinators."
+ * Fully Registered: If the user is authenticated and their email exists in the registered roster, they bypass all forms and land directly on the Participant Dashboard.
+2. Participant Dashboard (Core UI)
+Once successfully routed to the dashboard, the interface shifts to a persistent, event-focused layout.
+ * The Persistent QR Module:
+   * Placement: A floating or fixed-position card anchored to the top-right or bottom-right corner of the screen, ensuring it is always visible regardless of how far down the participant scrolls.
+   * Content: This renders the unique qr_token generated during the registration/upload phase.
+ * Download Action: Just below the rendered QR code, a "Download QR" button allows the user to save the code directly to their device's gallery. This acts as a crucial offline fallback in case the venue has poor Wi-Fi and they cannot load the web dashboard at the check-in desk.
+3. Post-Registration Redirects
+ * The "Welcome Back" Bypass: Once a participant successfully completes registration, any future clicks on the original event link will automatically detect their active session and registered status, instantly redirecting them to this dashboard without flashing the login or form pages.
+
+
+Here is the technical specification for the remaining features of the Participant Dashboard, extracted directly from the workflow mapped out in your diagram (1000196380.jpg).
+To ensure the interface remains clean, these features should render conditionally based on the current timeline and state of the event.
+1. Pre-Event & Logistics State
+ * Timeline & Instructions Module: A dedicated text block displaying the schedule of events, general guidelines, and any broadcast messages from the organizers.
+ * Physical Allotment Display: A clear, highlighted banner showing the team's pre-assigned physical location (e.g., "Room No: 3 | Desk: 12"), keeping them oriented upon arrival.
+2. Active Round & Submission Module
+This section remains hidden or locked until the organizer officially triggers the start of the round.
+ * Problem Statement Reveal: A dynamic text or document viewer that unveils the specific challenges or problem statements exactly when the round begins.
+ * Target Selection: A dropdown menu allowing the team to select which specific problem statement they have chosen to tackle.
+ * Project Submission Fields: Input controls for the final deliverables, specifically an input box to "Paste GitHub repo link" and a file upload zone for the "Upload PPT" requirement.
+ 
+3. Post-Round & Conclusion State
+ * Evaluation Standby Banner: Once the round ends or the submission is locked, the active module is replaced with a status message reading, "Result will be announced soon," preventing further edits.
+ * Next Round Instructions: If the team is shortlisted and Round 2 begins, the dashboard refreshes to display Round 2-specific instructions and reveals the next set of problem statements.
+ * Certificate Generation: If the team is not selected for the next round, or when the entire event concludes, a prominent "Download Certificate of Participant" button appears, allowing them to instantly retrieve their generated credential.
+
+
+
+
+
+
+That is a brilliant simplification. Relying on a single, universal QR code and using the Scanner's Role to determine the action drastically reduces the complexity of your database schema. You only need to store and render one qr_token per team, and the participant never has to fumble around looking for a "second" QR code.
+Here is how this unified logic translates into the backend architecture and finalizes the Participant Dashboard.
+The Universal QR Routing Logic (Backend)
+When a device scans the participant's QR code, the request hits a single API endpoint (e.g., /api/scan). The backend acts as a smart router based on the authenticated session of the person holding the camera:
+ * Scanner = Coordinator:
+   * The API executes the check-in protocol.
+   * It updates attended = TRUE and returns the team's pre-allotted desk to the coordinator's screen.
+ * Scanner = Judge:
+   * The API recognizes the Judge role and bypasses attendance logic.
+   * It fetches the specific team's details, their submitted GitHub/PPT links, and the active round's scoring schema, instantly rendering the evaluation sheet on the judge's device.
+Finalized Participant Dashboard (Updated)
+With the single-QR logic locked in, the Participant Dashboard is cleaner and requires fewer state changes.
+1. The Persistent Anchor
+ * The Master QR Code: A single QR code remains fixed on the dashboard throughout the entire event. It serves as their universal ID badge for both entry gates and judge evaluations.
+ * Offline Fallback: The "Download QR" button sits directly below it, ensuring they can save it to their phone gallery immediately after registration.
+2. Pre-Event & Logistics State
+ * Welcome & Timeline: Displays the event schedule, rulebook, and broadcast instructions.
+ * Desk Location: A prominent banner confirming their physical assignment (e.g., "Room 3 | Desk 12").
+3. Active Round & Submission Module
+ * Problem Statement Reveal: Unlocks and displays the hackathon challenges when the round officially starts.
+ * Submission Form: Input fields for the team leader to paste their GitHub repository link and upload the presentation file (PPT/PDF).
+ * Lock-in Action: A "Submit Project" button that locks their inputs and updates their status to ready for evaluation.
+4. Post-Round State
+ * Standby Message: Once submitted, the UI locks and displays "Evaluation in Progress – Results will be announced soon."
+ * Progression or Conclusion: Based on the organizer's "Publish Result" action, the dashboard either resets to display Round 2 problem statements or reveals the "Download Certificate" button for non-advancing teams.
+This role-based scanning approach is highly efficient. However, it introduces one specific edge case: What should the API do if a Judge walks up and scans a team's QR code, but the database shows that team's attended status is still FALSE (meaning they slipped past the entry gate without a volunteer scanning them)? Should it block the judge, or automatically mark the team as attended?
+
+
+
+
+
+
+
+
+Event Dashboard Revised
+
+
+Here is the fully updated Organizer Event Dashboard architecture, integrating the global round selection and your new desk retention logic for advanced rounds.
+Revised Event Dashboard (Multi-Round Architecture)
+This master dashboard acts as the central control room. With the introduction of rounds, the layout uses a top-level context switch to ensure the data displayed strictly matches the active phase of the hackathon.
+Global Round Navigation
+ * Persistent Round Selector: A prominent tab system (e.g., "Round 1", "Round 2") at the top of the dashboard. Switching these tabs updates a global state parameter, automatically filtering all nested data tables, attendance logs, and judging schemas to reflect only the selected round.
+Registration & Intelligent Desk Logistics
+ * Universal Data Importer & Form Links: Access points to create native registration forms, paste external links, or upload batch .xlsx/.csv files to generate unique, time-based check-in QR tokens for Round 1 entry.
+ * Round 1 Pre-Allotment: The initial auto-allotment engine that sequentially maps registered teams to physical desks using row-level locking to prevent concurrent booking conflicts.
+ * Advanced Round Desk Retention Toggle: A specific control block that appears only when configuring Round 2 (or higher). Organizers can toggle "Retain Previous Allotments."
+ * Retention Logic: When toggled ON, the PostgreSQL backend simply carries over the exact desk_id for the shortlisted teams, allowing participants to stay securely in their original seats. When toggled OFF, the system frees up the floor plan and triggers a fresh "Auto-Allot" sequence to consolidate the finalists into a tighter physical cluster.
+Live Event & Evaluation Operations
+ * Role Access Distribution: One-click modules to copy secure, role-specific onboarding links for Coordinators and Judges.
+ * Round-Specific Live Scoring: A real-time matrix aggregating judge evaluations. Because the dashboard is filtered by round, it exclusively displays the scoring schema and incoming points relevant to the current phase.
+ * Dynamic Rank List & Shortlisting: The adjustable leaderboard where organizers finalize scores and use the visual slider to determine the cutoff. Clicking "Publish Result" officially advances the shortlisted teams into the next round's database state.
+Exception Handling
+ * Manual Overrides: Tools to manually purge ghost teams, adjust team sizes, or execute a force check-in if a participant's mobile device fails during QR scanning.
+If the "Retain Previous Allotments" toggle is turned on for Round 2, but a shortlisted team's original desk is in a room you want to completely close down to save power, should the UI allow you to drag-and-drop just that specific team to a new desk while keeping the rest untouched?
+
+
+Rank list page
+
+
+Here is the technical specification for the Shortlisting and Rank List Page, structured to provide clear, actionable UI and state management logic for development.
+Rank List & Shortlisting Dashboard
+This page acts as the definitive conclusion of an evaluation round. It provides organizers with a flexible data grid to analyze scores, manual override controls for edge cases, and the deployment mechanism for the next phase of the event.
+1. Dynamic Leaderboard & Sorting Engine
+ * Multi-Parameter Data Grid: A master table displaying all evaluated teams. Clicking any column header dynamically re-sorts the list. Organizers can sort by the aggregated Total Score, any individual criteria (e.g., viewing who scored highest purely on "Innovation"), or the Number of Judges to spot teams that missed an evaluation.
+ * Drag-and-Drop Reordering: A fluid, modern UI interaction allowing the organizer to manually grab a team's row and slide it up or down the rankings. This is essential for resolving tie-breakers or applying off-record penalties without altering the raw database scores.
+2. The Shortlisting Module
+ * Dynamic Cut-off Slider: A visual slider component (paired with a numeric input) that allows the organizer to set the exact progression threshold (e.g., sliding to "15" to select the top 15 teams).
+ * Derived Shortlist Table: As the slider is adjusted, the UI instantly generates and populates a secondary, isolated table below the master list. This table displays only the advancing cohort, providing a clean, focused view of the finalists.
+ * Result Publication Action: A primary "Publish Result" button connected to the shortlist table. Clicking this commits the final advancing roster to the database, updates the status for all participants, and triggers the UI shift on their dashboards to reveal Round 2.
+3. Universal Export Utilities
+ * Contextual CSV Generation: Every rendered table—both the master evaluation list and the isolated shortlist—features a dedicated "Download CSV" action. This ensures organizers can extract the precise data view they currently have configured on their screen for external reporting or backups.
+When the "Publish Result" button is clicked and the participants' dashboards need to update, do you plan to use a real-time WebSocket push for an instant reveal, or will you rely on a standard polling/refresh mechanism from their devices?
+
+
+Judgement Page
+
+
+Here is the developer-ready specification for the Judgement Tracking and Builder pages, structured to ensure Antigravity can easily map these requirements to distinct React components and backend state logic.
+Organizer Judgement Dashboard
+This page acts as the central hub for monitoring the real-time evaluation phase, tracking judge activity, and aggregating multi-tiered scores.
+ * Active Judge Profiles: A top-level roster displaying the credentials of connected judges and their live scanning activity status.
+ * Live Evaluation Queue: A dynamic list of teams that have been scanned. Teams whose QR code has been read but lack submitted points display a persistent "Evaluation in Progress" status badge.
+ * Dynamic Scoring Matrix: Upon submission, the UI updates to show the evaluated team and their scores. The system dynamically scales the UI when multiple judges evaluate the same team.
+ * Export Utility: A "Download CSV" action that extracts the complete scoring matrix, instantly compiling all individual criteria points and final calculated averages into a spreadsheet.
+ * Builder Routing: A primary call-to-action button labeled "Create Judging Sheet" that redirects the organizer to the sheet configuration canvas.
+Scoring Matrix Rendering Example
+| Team Name | Innovation | Technical Execution | Total |
+|---|---|---|---|
+| Judge 1 | 8 | 9 | 17 |
+| Judge 2 | 6 | 8 | 14 |
+| Average | 7.0 | 8.5 | 15.5 |
+Judgement Sheet Builder
+This page functions as a modular canvas, similar to the registration form builder, but strictly focused on defining the numerical scoring schema that powers the PostgreSQL backend and the judges' mobile interfaces.
+ * Criteria Configuration: A visual editor where organizers can add distinct evaluation parameters, such as "Business Viability" or "Code Quality."
+ * Point Scale Mapping: Input controls to define the maximum point ceiling for each specific criterion (e.g., scaling Innovation out of 20, but Presentation out of 10).
+ * Live Form Preview: A toggle to view exactly how the scoring input fields will render on the judges' devices.
+ * Schema Deployment: A publishing action that compiles the criteria into the database schema, instantly updating the evaluation payload required when a judge scans a team's QR code.
+When the system calculates the average row for multiple judges, how should the platform handle scenarios where a judge accidentally submits a drastically skewed score (e.g., a 1 instead of a 10)?
+
+
+Attendance Page
+
+
+Here is the technical specification for the Event Attendance Page. This page acts as the live command center for physical check-ins on the day of the hackathon, tracking both personnel activity and team arrivals.
+Live Attendance & Personnel Page
+This interface splits into two distinct modules: monitoring the active volunteer workforce and tracking the real-time influx of registered teams.
+1. The Volunteer (Coordinator) Hub
+ * Active Roster: A status panel displaying all volunteers currently authenticated via the role-specific link generated during event setup.
+ * Live Status Indicators: Visual tags (e.g., a green dot for "Active," grey for "Offline") indicating WebSocket connection status or recent API activity from their scanning device.
+ * Throughput Metrics: A lightweight counter next to each volunteer's name showing the total number of teams they have successfully scanned in. This helps the organizer balance the workload across different entry gates.
+2. The Live Attendance Feed
+ * The Master Check-In List: A dynamically updating data table specifically filtered to show only teams where attended = TRUE.
+ * Data Columns: Must include Team Name, Assigned Desk (from the pre-allotment logic), Timestamp of check-in, and the specific Volunteer who processed the entry.
+ * Entry Method Badges: Visual indicators distinguishing between a "QR Check-In" and a "Manual Check-In."
+3. Manual Overrides & Exception Handling
+ * Manual Check-In Action: A search bar allowing the organizer or volunteer to look up a team by name or leader email. If a participant's phone dies or their QR token is corrupted, clicking a "Force Check-In" button manually executes the database update and displays their pre-allotted desk.
+ * Reversion Tool: An "Undo Check-In" action in case a volunteer accidentally scans or manually admits the wrong team, instantly resetting that team's status back to pending.
+4. Global Progress Overview
+ * Live Progress Bar: A top-level statistical widget displaying the ratio of "Checked-In Teams" versus "Total Registered Teams" (e.g., "42 / 50 Teams - 84% Arrived").
+For the live attendance feed, should the table automatically sort by the most recent check-in timestamp at the top, or would you prefer it strictly alphabetized by Team Name?
+
+
+Desk Layout Page
+
+
+Here is the component-based specification for the Edit Desk Layout Page, designed clearly so Antigravity can immediately map these requirements to UI components and state logic.
+Venue Overview & Room Management
+ * Room Cards: Render the venue as a grid of small, rounded cube cards. Each card acts as a high-level summary, displaying the Room Number (e.g., "Room A") and a quick occupancy ratio (e.g., "15/20 Desks Filled").
+ * Add Room Action: Include a distinct, dashed-border "+" card at the end of the grid. Clicking this prompts a simple input to name and instantly instantiate a new room into the database.
+ * Interaction Trigger: Clicking any existing room card opens the detailed Desk Layout Modal as an overlaid popup, dimming the background to focus the organizer's attention.
+Room Detail Modal (Desk Layout)
+ * Visual Grid Layout: Inside the modal, desks are displayed in an organized, responsive grid. The system automatically assigns sequential labels (D1, D2, D3, etc.) to each desk component.
+ * Live State Color Coding: Apply strict conditional CSS rendering based on the database state. Desks map to green (empty/available for pre-allotment) and red (filled/locked by a registered team).
+ * Desk Addition: A persistent "Add Desk" button within the modal appends a new desk to the grid sequence and immediately updates the room's total capacity in the backend.
+ * Hover Details: Hovering over a red (filled) desk triggers a minimal tooltip displaying the assigned Team Name and Member Count.
+Advanced Utility Features
+ * Bulk Desk Generation: When adding a new room, include a numeric input to "Generate [ X ] Desks." This prevents the organizer from having to click "Add Desk" 50 times manually.
+ * Drag-and-Drop Reassignment: Implement a mechanic where an organizer can drag a red desk (an assigned team) and drop it onto a green desk (an empty space) to instantly update that team's physical location.
+ * Variable Capacity Tags: Add a small badge on each desk icon indicating its maximum seating capacity (e.g., a "2" or a "5") to help organizers visually manage team size constraints.
+When implementing the drag-and-drop reassignment, should the UI strictly prevent moving a large team to a desk with a smaller capacity, or should it allow an organizer override?
+
+
+Registration form Builder
+
+
+Here is the technical and UI specification for the Native Registration Form Builder, structured so Antigravity can clearly translate the requirements into a dynamic component.
+Native Registration Form Builder
+This page provides a modular interface to construct the exact data schema required for participant entry. Crucially, it must seamlessly connect the front-end inputs to the backend's pre-allotment desk locking logic.
+1. The Builder Canvas
+ * Dynamic Schema Interface: A visual, top-to-bottom canvas where organizers can append, reorder, or delete custom input fields.
+ * Immutable Base Fields: System-locked mandatory fields (e.g., "Team Name," "Leader Email," "Password/Auth Token") that cannot be removed, ensuring the database always receives the primary keys required for auth and tracking.
+ * Live Preview Toggle: A rendering mode allowing the organizer to view and interact with the form exactly as a participant will see it before publishing.
+2. Custom Field Configuration
+ * Input Modularity: A tool palette to add diverse field types: Short Text (phone numbers), Dropdowns (college year, preferred track), and File Uploads (resumes or ID proofs).
+ * Validation Toggles: Checkboxes to mark specific fields as "Required" or "Optional," alongside basic regex validation configurations (e.g., ensuring text inputs match standard email or phone formats).
+3. Capacity & Allotment Rules (Critical)
+ * Member Count Selector: A mandatory dropdown for the registering user to specify their "Total Team Size." This is the exact parameter the backend will use to query capacity >= [team_size] for the instant desk lock.
+ * Dynamic Member Arrays: Conditional UI logic that automatically renders additional "Member Name" and "Member Email" input blocks based on the integer selected in the team size dropdown.
+ * Hard Limits: Organizer-defined threshold settings establishing the absolute minimum and maximum allowable members per team for this specific event.
+4. Compilation & Deployment
+ * Schema Generation: A final "Publish Form" button that compiles the visual canvas into a structured data format.
+ * Routing Action: Upon successful save, the system generates the unique public registration URL and automatically redirects the organizer back to the main Event Dashboard, flipping the UI state to "Edit Form" and "Copy Link."
+Since the custom fields added by the organizer are entirely dynamic, do you plan to store the resulting form schema as a single JSONB column in your PostgreSQL/TiDB database, or will you use a relational Entity-Attribute-Value (EAV) table structure?
+
+
+Event Dashboard
+
+
+Here is the revised architecture for the Organizer Event Dashboard, fully adapted to the highly efficient pre-allotment model where desks are assigned during registration rather than check-in.
+1. Registration & Pre-Allotment Management
+ * Form Integration: Organizers can spin up a native registration form or paste an external link (e.g., Google Forms). The dashboard instantly updates to provide "Edit" and "Copy Link" actions.
+ * Universal Data Importer: A secure dropzone for .xlsx or .csv files allows manual batch ingestion. The system reads the first row to define the schema and automatically generates a unique, time-based qr_token for every imported participant.
+ * Real-Time Capacity Tracking: The dashboard displays a live counter of available versus locked desks. As teams register, the backend handles row-level locking to instantly and safely assign appropriate table sizes, entirely preventing "Flash Sale" race conditions.
+2. Live Attendance & Spatial Mapping
+ * Lightweight Check-In Monitor: Because desks are pre-allotted, the check-in view simply tracks real-time QR scans from Coordinators, instantly flipping team statuses to attended = TRUE with zero processing lag.
+ * The "Swiss Cheese" Heatmap: A visual venue map that highlights un-scanned, empty desks in red as the event start time approaches, giving organizers a clear picture of physical no-shows.
+3. Waitlist & Exception Handling
+ * Waitlist Resolution Interface: If total registrations exceed the physical desk count, overflow teams populate a "Waitlisted" queue. Organizers can use the "Allot Remaining" function to seamlessly drop these teams into the exact desks freed up by no-shows.
+ * Ghost Team Purge: A manual review module allowing organizers to identify and delete spam or duplicate registrations, instantly releasing locked desks back into the available pool for waitlisted participants.
+4. Live Event Operations & Judging
+ * Role Access Distribution: Dedicated modules to generate and copy secure onboarding links for Coordinators and Judges, strictly enforcing role-based dashboard access.
+ * Live Scoring Conduit: A real-time matrix aggregating incoming judge evaluations. It automatically normalizes averages based on the active count of judges to prevent skewed data if one judge misses a team.
+ * Dynamic Rank List: An adjustable leaderboard where organizers finalize aggregate scores, resolve potential ties, and publish the results to immediately reveal the next round's problem statements on the participants' screens.
+Would you like to draft the Next.js API route that executes the row-level locking for the instant desk assignment, or should we map out the specific database schema for the live scoring conduit next?
+
+
+Create Event
+
+
+Page Overview: Event Configuration
+The "Create Event" page is the primary control center for defining the structural and operational mechanics of a new hackathon. It acts as a comprehensive configuration interface where organizers establish basic event details, multi-round structures, physical logistics, and distinct registration workflows.
+Core Event Parameters
+ * Event Identity & Branding: Input fields for the official event name, subtitle, and an overarching description to establish the hackathon's identity.
+ * Global Timeline: Precise datetime configurations defining the overall event start and end times.
+ * Round Configuration: Controls to specify the number of evaluation rounds, allowing custom start times and distinct judging criteria for each specific phase.
+ * Dynamic Problem Statements: Text editors and attachment fields for the challenges, paired with a visibility toggle to keep them completely hidden from participants until a designated round officially begins.
+ * Prize & Winner Allocation: A numeric selector defining the total number of winning slots or specific prize tiers to be awarded at the conclusion of the event.
+Registration Strategy Options
+ * Native Form Builder: An integrated tool for creating customized registration forms directly on the platform, allowing participants to sign up and form teams seamlessly.
+ * External Link Delegation: An input field to paste an external Google Form URL if the organizer prefers to use outside tools for initial data collection.
+ * Bulk Participant Import: A direct .xlsx file upload utility allowing the organizer to manually ingest a finalized, structured list of teams and participants at the close of registration.
+Venue Logistics & Finalization
+ * Physical Layout Settings: Input parameters for defining the specific "Room Number" and the total "Number of Desks" available, which automatically feeds into the system's auto-allotment engine.
+ * Team Constraints: Limiters to establish the minimum and maximum allowable team sizes for the hackathon.
+ * Event Publishing: A final submission action that locks in the parameters, activates the database instance, and triggers the generation of the unique, role-specific access links for coordinators, judges, and participants.
+Given that problem statements can be hidden until a specific round begins, how do you plan to handle the real-time UI state updates for participants when that information needs to be instantly revealed?
+
+
+Landing page
+
+
+Here is a clear, developer-ready specification for the Landing Page and Authentication routing flow. This is structured to ensure that Antigravity can easily translate the logic into UI components and routing rules.
+1. Landing Page UI Components
+ * Primary Action Button: "Create Event"
+ * Secondary Action Button: "Sign In"
+2. Route A: The "Sign In" Flow (For Returning Organizers)
+ * Action: The user clicks the "Sign In" button.
+ * Routing: Redirects the user to the Authentication/Login interface.
+ * Post-Auth State: Upon successful login, route the user directly to the Event List Page.
+ * Event List Page UI:
+   * Displays a list or grid of all previously created events associated with that user's account.
+   * Clicking on any specific event card redirects the user to that event's dedicated Organizer Dashboard.
+   * Includes a prominent Floating Action Button (FAB) labeled "+" or "Create Event" which links to the Create Event configuration page.
+3. Route B: The "Create Event" Flow (For New Event Setup)
+ * Action: The user clicks the "Create Event" button directly from the Landing Page.
+ * Routing (Unauthenticated): Redirects the user to the Authentication/Login interface first.
+ * Post-Auth Routing Logic (The Override): Upon successful login, the system must detect the original intent. It will bypass the Event List Page entirely and route the user directly to the Create Event Page.
+ * Routing (Authenticated): If the user is already logged in and clicks "Create Event" from the landing page, route them directly to the Create Event page.
+Should we also define the specific input fields and validation states required for the actual "Create Event" page next?
