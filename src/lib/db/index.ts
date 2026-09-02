@@ -5,6 +5,17 @@ import * as fs from "fs";
 
 // Read SSL CA certificate for TiDB connection
 function getSSLConfig() {
+  // 1. Raw CA certificate provided via env (ideal for Vercel / serverless)
+  if (process.env.DATABASE_SSL_CA) {
+    return {
+      ssl: {
+        ca: process.env.DATABASE_SSL_CA,
+        minVersion: "TLSv1.2" as const,
+      },
+    };
+  }
+
+  // 2. CA file path (local development)
   const caPath = process.env.DATABASE_SSL_CA_PATH;
   if (caPath) {
     try {
@@ -15,11 +26,16 @@ function getSSLConfig() {
         },
       };
     } catch {
-      console.warn(`[DB] SSL CA file not found at ${caPath}, connecting without SSL`);
-      return {};
+      console.warn(`[DB] SSL CA file not found at ${caPath}, falling back to system TLSv1.2`);
     }
   }
-  return {};
+
+  // 3. Default for cloud/Vercel (Node.js includes Let's Encrypt ISRG Root X1 by default)
+  return {
+    ssl: {
+      minVersion: "TLSv1.2" as const,
+    },
+  };
 }
 
 // Create MySQL connection pool for TiDB
