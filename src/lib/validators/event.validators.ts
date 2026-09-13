@@ -21,6 +21,10 @@ export const createEventSchema = z.object({
   registrationCloses: z.string().datetime().optional().nullable(),
   eventStarts: z.string().datetime().optional().nullable(),
   eventEnds: z.string().datetime().optional().nullable(),
+  googleSheetUrl: z.string().optional().nullable(),
+  autoSyncEnabled: z.boolean().optional(),
+  syncIntervalMinutes: z.number().int().min(1).max(1440).optional(),
+  participantNotice: z.string().max(5000).optional().nullable(),
 });
 
 export const updateEventSchema = createEventSchema.partial();

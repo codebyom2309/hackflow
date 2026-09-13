@@ -15,7 +15,11 @@ import { eventMemberships } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 
 const submitSchema = z.object({
-  githubUrl: z.string().url().optional(),
+  projectTitle: z.string().optional(),
+  projectDescription: z.string().optional(),
+  githubUrl: z.string().optional(),
+  pptUrl: z.string().optional(),
+  demoUrl: z.string().optional(),
   problemStatementId: z.string().optional(),
   pptFileKey: z.string().optional(),
   pptFilename: z.string().optional(),

@@ -23,6 +23,8 @@ const updateRoundSchema = z.object({
     id: z.string(),
     title: z.string(),
     description: z.string(),
+    track: z.string().optional(),
+    attachmentUrl: z.string().optional(),
   })).optional(),
 });
 

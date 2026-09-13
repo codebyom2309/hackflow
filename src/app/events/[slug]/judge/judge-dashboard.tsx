@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import styles from "./judge.module.css";
+import { useToast } from "@/components/ui";
 
 interface RoundInfo {
   id: string;
@@ -29,9 +30,17 @@ interface JudgeDashboardProps {
   event: EventInfo;
   rounds: RoundInfo[];
   roster: RosterItem[];
+  assignedTeamIds: string[] | null; // null = no assignments (see all), string[] = filtered
 }
 
-export default function JudgeDashboard({ event, rounds, roster }: JudgeDashboardProps) {
+export default function JudgeDashboard({ event, rounds, roster, assignedTeamIds }: JudgeDashboardProps) {
+  const toast = useToast();
+
+  // Filter roster to assigned teams only (when assignments exist)
+  const visibleRoster = assignedTeamIds !== null
+    ? roster.filter((t) => assignedTeamIds.includes(t.teamId))
+    : roster;
+
   const [activeTab, setActiveTab] = useState<"scan" | "roster">("scan");
   const [selectedRound, setSelectedRound] = useState<RoundInfo | null>(
     rounds.find((r) => r.status === "JUDGING") || rounds[0] || null
@@ -129,7 +138,12 @@ export default function JudgeDashboard({ event, rounds, roster }: JudgeDashboard
             });
             return;
           }
-          setScanResult({ status: "success", message: "Team found!", teamName: team.name });
+          const notAssigned = assignedTeamIds !== null && !assignedTeamIds.includes(team.id);
+          setScanResult({
+            status: notAssigned ? "warning" : "success",
+            message: notAssigned ? "Note: Team not in your assigned list" : "Team found!",
+            teamName: team.name,
+          });
           await loadCriteria(team.id, team.name);
         } else {
           setScanResult({ status: "error", message: json.error || "Invalid QR" });
@@ -204,6 +218,7 @@ export default function JudgeDashboard({ event, rounds, roster }: JudgeDashboard
         setLastSubmitMeta({ teamId: evalSheet.teamId, roundId: selectedRound.id, canUndo: true });
         setEvalSheet(null);
         setScanResult(null);
+        toast.success("Scores submitted successfully!");
         await refreshProgress();
 
         // Undo window: 10 seconds
@@ -213,7 +228,7 @@ export default function JudgeDashboard({ event, rounds, roster }: JudgeDashboard
         }, 10000);
       } else {
         const json = await res.json();
-        alert(json.error || "Submission failed");
+        toast.error(json.error || "Submission failed");
       }
     } finally {
       setSubmitting(false);
@@ -229,17 +244,20 @@ export default function JudgeDashboard({ event, rounds, roster }: JudgeDashboard
       body: JSON.stringify({ teamId: lastSubmitMeta.teamId, roundId: lastSubmitMeta.roundId }),
     });
     if (res.ok) {
+      toast.info("Evaluation undone. You may rescore this team.");
       setLastSubmitMeta(null);
       await refreshProgress();
+    } else {
+      toast.error("Failed to undo evaluation.");
     }
   }
 
-  const filteredRoster = roster.filter(
-    (t) =>
-      !evaluatedIds.has(t.teamId) || activeTab === "roster"
-        ? t.teamName.toLowerCase().includes(search.toLowerCase())
-        : false
-  );
+  const totalTeams = assignedTeamIds !== null ? assignedTeamIds.length : (progress.total || visibleRoster.length);
+  const evalCount = assignedTeamIds !== null
+    ? visibleRoster.filter((t) => evaluatedIds.has(t.teamId)).length
+    : progress.evaluated;
+  const remCount = Math.max(0, totalTeams - evalCount);
+  const progressRate = totalTeams > 0 ? Math.round((evalCount / totalTeams) * 100) : 0;
 
   const judgingRound = selectedRound?.status === "JUDGING";
 
@@ -250,6 +268,11 @@ export default function JudgeDashboard({ event, rounds, roster }: JudgeDashboard
         <div>
           <h1 className={styles.title}>Judge Dashboard</h1>
           <p className={styles.subtitle}>{event.title}</p>
+          {assignedTeamIds !== null && (
+            <div className={styles.assignmentBadge}>
+              🎯 Assigned to you: {assignedTeamIds.length} of {roster.length} teams
+            </div>
+          )}
         </div>
 
         {/* Round selector */}
@@ -273,24 +296,24 @@ export default function JudgeDashboard({ event, rounds, roster }: JudgeDashboard
       <div className={styles.statsCard}>
         <div className={styles.statsRow}>
           <div className={styles.statItem}>
-            <span className={styles.statVal}>{progress.total}</span>
-            <span className={styles.statLabel}>Teams</span>
+            <span className={styles.statVal}>{totalTeams}</span>
+            <span className={styles.statLabel}>{assignedTeamIds !== null ? "Assigned Teams" : "Teams"}</span>
           </div>
           <div className={styles.statItem}>
-            <span className={`${styles.statVal} ${styles.valGreen}`}>{progress.evaluated}</span>
+            <span className={`${styles.statVal} ${styles.valGreen}`}>{evalCount}</span>
             <span className={styles.statLabel}>Evaluated</span>
           </div>
           <div className={styles.statItem}>
-            <span className={`${styles.statVal} ${styles.valYellow}`}>{progress.total - progress.evaluated}</span>
+            <span className={`${styles.statVal} ${styles.valYellow}`}>{remCount}</span>
             <span className={styles.statLabel}>Remaining</span>
           </div>
           <div className={styles.statItem}>
-            <span className={styles.statVal}>{Math.round(progress.rate)}%</span>
+            <span className={styles.statVal}>{progressRate}%</span>
             <span className={styles.statLabel}>Progress</span>
           </div>
         </div>
         <div className={styles.progressBar}>
-          <div className={styles.progressFill} style={{ width: `${progress.rate}%` }} />
+          <div className={styles.progressFill} style={{ width: `${progressRate}%` }} />
         </div>
       </div>
 
@@ -376,7 +399,7 @@ export default function JudgeDashboard({ event, rounds, roster }: JudgeDashboard
         <button
           className={`${styles.tabBtn} ${activeTab === "roster" ? styles.tabActive : ""}`}
           onClick={() => { setActiveTab("roster"); setScanning(false); }}
-        >📋 Team Roster ({roster.length})</button>
+        >📋 Team Roster ({visibleRoster.length})</button>
       </div>
 
       {/* Scanner Tab */}
@@ -427,7 +450,7 @@ export default function JudgeDashboard({ event, rounds, roster }: JudgeDashboard
             onChange={(e) => setSearch(e.target.value)}
           />
           <div className={styles.rosterList}>
-            {roster
+            {visibleRoster
               .filter((t) => t.teamName.toLowerCase().includes(search.toLowerCase()))
               .map((item) => {
                 const isEvaluated = evaluatedIds.has(item.teamId);

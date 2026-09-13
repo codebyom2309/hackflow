@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getEventBySlug } from "@/lib/services/event.service";
 import { requireRole } from "@/lib/auth/guards";
 import { getEventRounds } from "@/lib/services/round.service";
+import ManagementLayout from "./management-layout";
 import OrganizerDashboard from "./organizer-dashboard";
 
 export const metadata = {
@@ -28,8 +29,12 @@ export default async function ManagePage({ params }: Params) {
   const rounds = await getEventRounds(event.id);
 
   return (
-    <main className="container" style={{ paddingTop: "var(--spacing-xl)" }}>
+    <ManagementLayout
+      eventTitle={event.title}
+      eventSlug={event.slug}
+      eventStatus={event.status}
+    >
       <OrganizerDashboard event={event} rounds={rounds} />
-    </main>
+    </ManagementLayout>
   );
 }

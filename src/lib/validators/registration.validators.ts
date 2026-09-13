@@ -43,12 +43,16 @@ export const registrationSchema = z.object({
   teamName: z.string().min(2, "Team name too short").max(100).trim(),
   leaderEmail: z.string().email("Invalid email"),
   teamSize: z.number().int().min(1).max(20),
+  leaderName: z.string().min(1).max(200).optional(),
+  leaderPhone: z.string().max(25).optional(),
+  college: z.string().max(255).optional(),
+  theme: z.string().max(100).optional(),
   members: z
     .array(
       z.object({
         name: z.string().min(1).max(200).trim(),
-        email: z.string().email().optional(),
-        phone: z.string().max(20).optional(),
+        email: z.string().email().optional().or(z.literal("")),
+        phone: z.string().max(25).optional(),
       })
     )
     .optional(),

@@ -53,6 +53,16 @@ export const teams = mysqlTable(
     formResponses: json("form_responses"),
     projectName: varchar("project_name", { length: 255 }),
     projectDescription: text("project_description"),
+    githubUrl: varchar("github_url", { length: 512 }),
+    pptUrl: varchar("ppt_url", { length: 512 }),
+    demoUrl: varchar("demo_url", { length: 512 }),
+
+    // Imported team metadata (allows teams to exist before leader creates a user account)
+    leaderEmail: varchar("leader_email", { length: 255 }),
+    leaderPhone: varchar("leader_phone", { length: 20 }),
+    college: varchar("college", { length: 255 }),
+    theme: varchar("theme", { length: 255 }),
+    problemStatement: text("problem_statement"),
 
     // Round tracking
     currentRoundId: varchar("current_round_id", { length: 36 }),
@@ -62,7 +72,7 @@ export const teams = mysqlTable(
   },
   (table) => [
     uniqueIndex("uq_team_name").on(table.eventId, table.name),
-    uniqueIndex("uq_team_leader").on(table.eventId, table.leaderId),
+    index("idx_teams_leader").on(table.eventId, table.leaderId),
     index("idx_teams_event").on(table.eventId),
     index("idx_teams_desk").on(table.deskId),
     index("idx_teams_status").on(table.eventId, table.status),

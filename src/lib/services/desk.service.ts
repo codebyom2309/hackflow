@@ -187,12 +187,33 @@ export async function allocateDesk(
         room_name: string;
       }>;
 
-      if (rows.length === 0) {
-        await conn.rollback();
-        return null; // No available desk
-      }
+      let desk = rows[0];
 
-      const desk = rows[0];
+      if (!desk) {
+        // Fallback: Find largest available desk in event
+        const [fallbackRows] = await conn.execute(
+          `SELECT d.id, d.desk_number, d.capacity, r.name as room_name
+           FROM desks d
+           JOIN rooms r ON d.room_id = r.id
+           WHERE r.event_id = ?
+             AND d.is_allocated = false
+           ORDER BY d.capacity DESC, d.desk_number ASC
+           LIMIT 1
+           FOR UPDATE`,
+          [eventId]
+        );
+        const fRows = fallbackRows as Array<{
+          id: string;
+          desk_number: number;
+          capacity: number;
+          room_name: string;
+        }>;
+        if (fRows.length === 0) {
+          await conn.rollback();
+          return null; // Truly no desks available
+        }
+        desk = fRows[0];
+      }
 
       // Mark desk as allocated
       await conn.execute(
@@ -263,7 +284,8 @@ export async function releaseDesk(teamId: string) {
 }
 
 /**
- * Reassign team to a different desk with capacity validation.
+ * Reassign or assign team to a desk.
+ * Allows organizer manual assignment even if capacity is slightly less than team size.
  */
 export async function reassignTeam(teamId: string, newDeskId: string) {
   const team = await db.query.teams.findFirst({
@@ -278,18 +300,12 @@ export async function reassignTeam(teamId: string, newDeskId: string) {
 
   if (!newDesk) throw new Error("Desk not found");
 
-  if (newDesk.isAllocated) {
+  if (newDesk.isAllocated && team.deskId !== newDeskId) {
     throw new Error("Desk is already allocated to another team");
   }
 
-  if (newDesk.capacity < team.memberCount) {
-    throw new Error(
-      `Desk capacity (${newDesk.capacity}) is less than team size (${team.memberCount})`
-    );
-  }
-
-  // Release old desk if exists
-  if (team.deskId) {
+  // Release old desk if exists and different
+  if (team.deskId && team.deskId !== newDeskId) {
     await db
       .update(desks)
       .set({ isAllocated: false })
@@ -305,25 +321,30 @@ export async function reassignTeam(teamId: string, newDeskId: string) {
   // Update team
   await db
     .update(teams)
-    .set({ deskId: newDeskId, status: "ACTIVE" })
+    .set({
+      deskId: newDeskId,
+      status: team.status === "REGISTERED" || team.status === "WAITLISTED" ? "ACTIVE" : team.status,
+    })
     .where(eq(teams.id, teamId));
 }
 
 /**
- * Auto-allot all waitlisted teams to available desks.
+ * Auto-allot all unseated teams (REGISTERED, WAITLISTED, ACTIVE) to available desks.
  */
 export async function autoAllotRemaining(eventId: string) {
-  const waitlistedTeams = await db.query.teams.findMany({
+  const { isNull, ne } = await import("drizzle-orm");
+  const unseatedTeams = await db.query.teams.findMany({
     where: and(
       eq(teams.eventId, eventId),
-      eq(teams.status, "WAITLISTED")
+      isNull(teams.deskId),
+      ne(teams.status, "ELIMINATED")
     ),
   });
 
   let allocated = 0;
   let failed = 0;
 
-  for (const team of waitlistedTeams) {
+  for (const team of unseatedTeams) {
     const result = await allocateDesk(eventId, team.id, team.memberCount);
     if (result) {
       allocated++;
@@ -332,7 +353,7 @@ export async function autoAllotRemaining(eventId: string) {
     }
   }
 
-  return { allocated, failed, total: waitlistedTeams.length };
+  return { allocated, failed, total: unseatedTeams.length };
 }
 
 /**

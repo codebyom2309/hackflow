@@ -85,6 +85,10 @@ export async function registerTeam(
     eventId,
     name: input.teamName,
     leaderId: userId,
+    leaderEmail: input.leaderEmail,
+    leaderPhone: input.leaderPhone || input.members?.[0]?.phone || undefined,
+    college: input.college || (input.customFields?.college as string) || undefined,
+    theme: input.theme || (input.customFields?.theme as string) || undefined,
     memberCount: input.teamSize,
     qrToken,
     status: "REGISTERED",
@@ -98,9 +102,9 @@ export async function registerTeam(
   memberRecords.push({
     id: crypto.randomUUID(),
     teamId,
-    name: input.members?.[0]?.name || "Team Leader",
+    name: input.leaderName || input.members?.[0]?.name || "Team Leader",
     email: input.leaderEmail,
-    phone: input.members?.[0]?.phone || undefined,
+    phone: input.leaderPhone || input.members?.[0]?.phone || undefined,
     isLeader: true,
   });
 
@@ -108,12 +112,13 @@ export async function registerTeam(
   if (input.members && input.members.length > 1) {
     for (let i = 1; i < input.members.length; i++) {
       const member = input.members[i];
+      if (!member.name || !member.name.trim()) continue;
       memberRecords.push({
         id: crypto.randomUUID(),
         teamId,
-        name: member.name,
-        email: member.email || `member${i}@placeholder.local`,
-        phone: member.phone || undefined,
+        name: member.name.trim(),
+        email: member.email?.trim() || `member${i}_${teamId.slice(0, 8)}@participant.hackflow`,
+        phone: member.phone?.trim() || undefined,
         isLeader: false,
       });
     }
@@ -173,8 +178,10 @@ function generateQRToken(
 
 /**
  * Get registration details for a user in an event.
+ * Checks both leaderId and leaderEmail for imported team support.
  */
 export async function getRegistration(userId: string, eventId: string) {
+  // First check if there's a PARTICIPANT membership
   const membership = await db.query.eventMemberships.findFirst({
     where: and(
       eq(eventMemberships.userId, userId),
@@ -183,12 +190,64 @@ export async function getRegistration(userId: string, eventId: string) {
     ),
   });
 
-  if (!membership) return null;
-
-  // Find the team
-  const team = await db.query.teams.findFirst({
+  // Find the team — check by leaderId first
+  let team = await db.query.teams.findFirst({
     where: and(eq(teams.eventId, eventId), eq(teams.leaderId, userId)),
   });
+
+  // If not found by leaderId, check by leaderEmail (imported teams)
+  if (!team) {
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, userId),
+    });
+    if (user?.email) {
+      const normalizedEmail = user.email.trim().toLowerCase();
+      team = await db.query.teams.findFirst({
+        where: and(
+          eq(teams.eventId, eventId),
+          eq(teams.leaderEmail, normalizedEmail)
+        ),
+      });
+
+      // If found via email, claim leadership
+      if (team) {
+        const { claimTeamLeadership } = await import("./user-mapping.service");
+        await claimTeamLeadership(userId, team.id, eventId);
+        // Refresh team record
+        team = await db.query.teams.findFirst({
+          where: eq(teams.id, team.id),
+        });
+      }
+    }
+  }
+
+  // Still not found? Check if user is a team member (non-leader)
+  if (!team) {
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, userId),
+    });
+    if (user?.email) {
+      const normalizedEmail = user.email.trim().toLowerCase();
+      const allEventTeams = await db.query.teams.findMany({
+        where: eq(teams.eventId, eventId),
+      });
+      for (const t of allEventTeams) {
+        const member = await db.query.teamMembers.findFirst({
+          where: and(
+            eq(teamMembers.teamId, t.id),
+            eq(teamMembers.email, normalizedEmail)
+          ),
+        });
+        if (member) {
+          team = t;
+          // Ensure membership exists
+          const { claimTeamMembership } = await import("./user-mapping.service");
+          await claimTeamMembership(userId, eventId);
+          break;
+        }
+      }
+    }
+  }
 
   if (!team) return null;
 
@@ -224,3 +283,4 @@ export async function getRegistration(userId: string, eventId: string) {
     desk,
   };
 }
+

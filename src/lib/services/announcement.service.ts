@@ -15,6 +15,8 @@ interface CreateAnnouncementInput {
   content: string;
   priority?: Priority;
   targetRole?: TargetRole;
+  targetVenue?: string;
+  targetTeamStatus?: string;
 }
 
 /**
@@ -34,6 +36,8 @@ export async function createAnnouncement(
     content: input.content,
     priority: input.priority || "NORMAL",
     targetRole: input.targetRole || "ALL",
+    targetVenue: input.targetVenue || "ALL",
+    targetTeamStatus: input.targetTeamStatus || "ALL",
     createdBy,
   });
 

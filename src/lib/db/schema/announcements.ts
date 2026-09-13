@@ -32,6 +32,8 @@ export const announcements = mysqlTable(
       "COORDINATOR",
       "JUDGE",
     ]).default("ALL"),
+    targetVenue: varchar("target_venue", { length: 100 }).default("ALL"),
+    targetTeamStatus: varchar("target_team_status", { length: 50 }).default("ALL"),
 
     createdBy: varchar("created_by", { length: 36 })
       .notNull()

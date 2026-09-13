@@ -101,6 +101,20 @@
   margin-bottom: var(--spacing-lg);
 }
 
+.assignmentBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: var(--rounded-full);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-accent);
+  margin-top: 8px;
+}
+
 .undoBanner {
   display: flex;
   justify-content: space-between;
@@ -476,6 +490,71 @@
   cursor: not-allowed;
 }
 
-@media (max-width: 600px) {
-  .evalModal { padding: var(--spacing-lg); }
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-sm);
+  }
+  .roundSelect {
+    width: 100%;
+  }
+  .statsCard {
+    padding: var(--spacing-md);
+  }
+  .statsRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+  }
+  .statVal {
+    font-size: 24px;
+  }
+  .evalModal {
+    width: 96%;
+    max-height: 90vh;
+    padding: var(--spacing-md);
+    overflow-y: auto;
+  }
+  .evalTitle {
+    font-size: 18px;
+  }
+  .criterionRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) 0;
+  }
+  .tapBtn {
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 16px;
+  }
+  .stepBtn {
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 20px;
+  }
+  .stepVal {
+    font-size: 20px;
+    min-width: 40px;
+    text-align: center;
+  }
+  .submitBtn {
+    padding: 14px;
+    font-size: 16px;
+  }
+  .rosterRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+  .rosterActions {
+    width: 100%;
+  }
+  .evalBtn {
+    width: 100%;
+    padding: 10px;
+    text-align: center;
+  }
 }

@@ -104,31 +104,85 @@
 /* Stat Grid */
 .statGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: var(--spacing-md);
   margin-bottom: var(--spacing-xl);
 }
 
 .statCard {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--rounded-xl);
-  padding: var(--spacing-lg);
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-hairline);
+  box-shadow: var(--shadow-sm);
+  border-radius: var(--rounded-lg);
+  padding: var(--spacing-lg) var(--spacing-md);
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: var(--spacing-xs);
+  transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
-.statIcon { font-size: 28px; }
-.statNum { font-size: 32px; font-weight: 700; letter-spacing: -1px; color: var(--color-ink); }
-.statLabel { font-size: 12px; color: var(--color-ink-muted); }
+.statCard:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-md);
+}
+
+.statIcon {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.statNum {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  color: var(--color-ink);
+  line-height: 1;
+}
+
+.statLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-ink-muted);
+  text-align: center;
+}
+
+/* Status breakdown */
+.statusBreakdown {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-wrap: wrap;
+  margin-bottom: var(--spacing-xl);
+}
+
+.statusPillBadge {
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--rounded-pill);
+  padding: 6px 14px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: var(--shadow-sm);
+}
+
+.statusPillCount {
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+.statusPillText {
+  color: var(--color-ink-muted);
+  text-transform: capitalize;
+}
 
 /* Quick Actions */
 .quickActions {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: var(--spacing-md);
   margin-bottom: var(--spacing-xl);
 }
@@ -140,16 +194,29 @@
   padding: var(--spacing-md) var(--spacing-lg);
   background: var(--color-surface-1);
   border: 1px solid var(--color-hairline);
-  border-radius: var(--rounded-lg);
+  box-shadow: var(--shadow-sm);
+  border-radius: var(--rounded-md);
   color: var(--color-ink);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
-.actionCard:hover { border-color: var(--color-accent); background: var(--color-surface-2); }
-.actionCard:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.actionCard:hover {
+  border-color: var(--color-accent);
+  background: var(--color-surface-2);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  color: var(--color-ink);
+}
+
+.actionCard:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
 
 /* Buttons */
 .primaryBtn {
@@ -161,10 +228,10 @@
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: opacity var(--transition-fast);
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
 }
 .primaryBtn:disabled { opacity: 0.5; cursor: not-allowed; }
-.primaryBtn:hover:not(:disabled) { opacity: 0.85; }
+.primaryBtn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
 
 .secondaryBtn {
   padding: 8px 18px;
@@ -235,10 +302,10 @@
 }
 
 .roundCard {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--rounded-xl);
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-hairline);
+  box-shadow: var(--shadow-sm);
+  border-radius: var(--rounded-lg);
   padding: var(--spacing-lg);
 }
 

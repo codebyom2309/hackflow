@@ -374,3 +374,59 @@
   color: var(--color-ink-muted);
   font-size: 14px;
 }
+
+/* Mobile & Tablet Optimizations */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-sm);
+  }
+  .title {
+    font-size: 28px;
+  }
+  .exportBtn {
+    width: 100%;
+    justify-content: center;
+    padding: 10px;
+  }
+  .statsCard {
+    padding: var(--spacing-md);
+  }
+  .statsRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+  }
+  .statVal {
+    font-size: 22px;
+  }
+  .cameraBox {
+    height: 300px;
+  }
+  .tabRow {
+    gap: var(--spacing-xs);
+  }
+  .tabBtn {
+    flex: 1;
+    text-align: center;
+    padding: 10px 8px;
+    font-size: 13px;
+  }
+  .rosterRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+  }
+  .rosterActions {
+    width: 100%;
+  }
+  .checkInBtn {
+    width: 100%;
+    padding: 12px;
+    font-size: 14px;
+    text-align: center;
+  }
+}
+

@@ -3,6 +3,7 @@ import {
   varchar,
   int,
   text,
+  boolean,
   timestamp,
   mysqlEnum,
   json,
@@ -37,7 +38,12 @@ export const events = mysqlTable(
       .notNull()
       .default("NATIVE"),
     externalFormUrl: varchar("external_form_url", { length: 512 }),
+    googleSheetUrl: varchar("google_sheet_url", { length: 1024 }),
+    autoSyncEnabled: boolean("auto_sync_enabled").notNull().default(false),
+    lastSyncedAt: timestamp("last_synced_at"),
+    syncIntervalMinutes: int("sync_interval_minutes").notNull().default(5),
     formSchema: json("form_schema"), // Dynamic form definition
+    participantNotice: text("participant_notice"),
 
     // Timing
     registrationOpens: timestamp("registration_opens"),

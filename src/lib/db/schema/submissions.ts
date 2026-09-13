@@ -2,6 +2,7 @@ import {
   mysqlTable,
   varchar,
   int,
+  text,
   boolean,
   timestamp,
   index,
@@ -28,8 +29,12 @@ export const submissions = mysqlTable(
       .references(() => events.id, { onDelete: "cascade" }),
 
     // Submission data
+    projectTitle: varchar("project_title", { length: 255 }),
+    projectDescription: text("project_description"),
     githubUrl: varchar("github_url", { length: 512 }),
     pptFileKey: varchar("ppt_file_key", { length: 512 }),
+    pptUrl: varchar("ppt_url", { length: 512 }),
+    demoUrl: varchar("demo_url", { length: 512 }),
     pptFilename: varchar("ppt_filename", { length: 255 }),
     pptFileSize: int("ppt_file_size"),
     problemStatementId: varchar("problem_statement_id", { length: 36 }),

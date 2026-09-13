@@ -16,7 +16,11 @@ const ALLOWED_FILE_TYPES = [
 ];
 
 interface SubmitInput {
+  projectTitle?: string;
+  projectDescription?: string;
   githubUrl?: string;
+  pptUrl?: string;
+  demoUrl?: string;
   problemStatementId?: string;
   pptFileKey?: string;
   pptFilename?: string;
@@ -58,17 +62,12 @@ export async function submitProject(
   });
   if (!team) throw new Error("Team not found in this event");
 
-  // 4. Validate GitHub URL format
-  if (input.githubUrl && !GITHUB_URL_REGEX.test(input.githubUrl)) {
-    throw new Error("Invalid GitHub URL. Expected format: https://github.com/user/repo");
-  }
+  // 4. Clean URLs
+  const cleanGithub = input.githubUrl ? input.githubUrl.trim() : undefined;
+  const cleanPpt = input.pptUrl ? input.pptUrl.trim() : undefined;
+  const cleanDemo = input.demoUrl ? input.demoUrl.trim() : undefined;
 
-  // 5. Validate file size
-  if (input.pptFileSize && input.pptFileSize > MAX_FILE_SIZE) {
-    throw new Error(`File exceeds maximum size of ${MAX_FILE_SIZE / 1024 / 1024}MB`);
-  }
-
-  // 6. Check for existing submission (upsert logic)
+  // 5. Check for existing submission (upsert logic)
   const existing = await db.query.submissions.findFirst({
     where: and(
       eq(submissions.teamId, teamId),
@@ -76,44 +75,69 @@ export async function submitProject(
     ),
   });
 
+  let submissionId: string;
+  let isUpdate = false;
+
   if (existing) {
     if (existing.isLocked) {
       throw new Error("This submission is locked and cannot be modified");
     }
 
-    // Update existing
+    // Update existing submission
     await db
       .update(submissions)
       .set({
-        githubUrl: input.githubUrl || existing.githubUrl,
-        pptFileKey: input.pptFileKey || existing.pptFileKey,
-        pptFilename: input.pptFilename || existing.pptFilename,
-        pptFileSize: input.pptFileSize || existing.pptFileSize,
-        problemStatementId: input.problemStatementId || existing.problemStatementId,
+        projectTitle: input.projectTitle ?? existing.projectTitle,
+        projectDescription: input.projectDescription ?? existing.projectDescription,
+        githubUrl: cleanGithub ?? existing.githubUrl,
+        pptUrl: cleanPpt ?? existing.pptUrl,
+        demoUrl: cleanDemo ?? existing.demoUrl,
+        pptFileKey: input.pptFileKey ?? existing.pptFileKey,
+        pptFilename: input.pptFilename ?? existing.pptFilename,
+        pptFileSize: input.pptFileSize ?? existing.pptFileSize,
+        problemStatementId: input.problemStatementId ?? existing.problemStatementId,
         submittedAt: new Date(),
       })
       .where(eq(submissions.id, existing.id));
 
-    return { id: existing.id, updated: true };
+    submissionId = existing.id;
+    isUpdate = true;
+  } else {
+    // Create new submission
+    submissionId = crypto.randomUUID();
+    await db.insert(submissions).values({
+      id: submissionId,
+      teamId,
+      roundId,
+      eventId,
+      projectTitle: input.projectTitle || null,
+      projectDescription: input.projectDescription || null,
+      githubUrl: cleanGithub || null,
+      pptUrl: cleanPpt || null,
+      demoUrl: cleanDemo || null,
+      pptFileKey: input.pptFileKey || null,
+      pptFilename: input.pptFilename || null,
+      pptFileSize: input.pptFileSize || null,
+      problemStatementId: input.problemStatementId || null,
+      isLocked: false,
+      submittedAt: new Date(),
+    });
   }
 
-  // 7. Create new submission
-  const id = crypto.randomUUID();
-  await db.insert(submissions).values({
-    id,
-    teamId,
-    roundId,
-    eventId,
-    githubUrl: input.githubUrl || null,
-    pptFileKey: input.pptFileKey || null,
-    pptFilename: input.pptFilename || null,
-    pptFileSize: input.pptFileSize || null,
-    problemStatementId: input.problemStatementId || null,
-    isLocked: false,
-    submittedAt: new Date(),
-  });
+  // Also sync to master teams record so idea and links persist globally
+  await db
+    .update(teams)
+    .set({
+      ...(input.projectTitle ? { projectName: input.projectTitle } : {}),
+      ...(input.projectDescription ? { projectDescription: input.projectDescription } : {}),
+      ...(cleanGithub ? { githubUrl: cleanGithub } : {}),
+      ...(cleanPpt ? { pptUrl: cleanPpt } : {}),
+      ...(cleanDemo ? { demoUrl: cleanDemo } : {}),
+      updatedAt: new Date(),
+    })
+    .where(eq(teams.id, teamId));
 
-  return { id, updated: false };
+  return { id: submissionId, updated: isUpdate };
 }
 
 /**

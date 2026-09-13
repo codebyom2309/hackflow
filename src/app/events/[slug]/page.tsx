@@ -2,6 +2,10 @@ import { auth } from "@/lib/auth/config";
 import { redirect } from "next/navigation";
 import { getEventBySlug } from "@/lib/services/event.service";
 import { getUserEventRole } from "@/lib/auth/guards";
+import { resolveUserTeam, claimTeamLeadership, claimTeamMembership } from "@/lib/services/user-mapping.service";
+import { db } from "@/lib/db";
+import { users } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import EventPortal from "./event-portal";
 
 export const metadata = {
@@ -46,10 +50,36 @@ export default async function EventPage({ params }: Params) {
     redirect(`/events/${slug}/dashboard`);
   }
 
+  // No existing role — try email-based matching for imported teams
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, session.user.id),
+  });
+
+  if (user?.email) {
+    const teamMatch = await resolveUserTeam(user.email, event.id);
+    if (teamMatch) {
+      // Auto-claim and redirect to dashboard
+      if (teamMatch.isLeader) {
+        await claimTeamLeadership(session.user.id, teamMatch.team.id, event.id);
+      } else {
+        await claimTeamMembership(session.user.id, event.id);
+      }
+      redirect(`/events/${slug}/dashboard`);
+    }
+  }
+
   // Default: Event portal for authenticated users wishing to register or view event
   return (
     <main className="container" style={{ paddingTop: "var(--spacing-xl)" }}>
-      <EventPortal event={event} userRole={role} />
+      <EventPortal
+        event={event}
+        userRole={role}
+        currentUser={{
+          id: session.user.id,
+          name: session.user.name || "",
+          email: session.user.email || "",
+        }}
+      />
     </main>
   );
 }

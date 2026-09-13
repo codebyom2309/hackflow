@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getEventBySlug } from "@/lib/services/event.service";
 import { getRegistration } from "@/lib/services/registration.service";
 import { generateQRPayload, generateQRCodeDataURL } from "@/lib/services/qr.service";
+import { getTeamCertificates } from "@/lib/services/certificate.service";
 import ParticipantDashboard from "./participant-dashboard";
 
 export const metadata = {
@@ -25,6 +26,9 @@ export default async function ParticipantDashboardPage({ params }: Params) {
     redirect("/events");
   }
 
+  // getRegistration now handles email-based matching for imported teams
+  // It checks: leaderId → leaderEmail → teamMembers.email
+  // and auto-claims leadership/membership if found
   const reg = await getRegistration(session.user.id, event.id);
   if (!reg?.team) {
     redirect(`/events/${slug}`);
@@ -32,6 +36,30 @@ export default async function ParticipantDashboardPage({ params }: Params) {
 
   const qrPayload = generateQRPayload(event.id, reg.team.id, event.qrSecret);
   const qrDataUrl = await generateQRCodeDataURL(qrPayload);
+
+  // Fetch certificates if generated
+  let certificates: Array<{
+    id: string;
+    recipientName: string;
+    teamName: string | null;
+    type: string;
+    verificationCode: string;
+    generatedAt: Date | null;
+  }> = [];
+
+  try {
+    const certs = await getTeamCertificates(reg.team.id, event.id);
+    certificates = certs.map((c) => ({
+      id: c.id,
+      recipientName: c.recipientName,
+      teamName: c.teamName,
+      type: c.type,
+      verificationCode: c.verificationCode,
+      generatedAt: c.generatedAt,
+    }));
+  } catch {
+    // Graceful fallback if certificates query fails
+  }
 
   return (
     <main className="container" style={{ paddingTop: "var(--spacing-xl)" }}>
@@ -41,6 +69,7 @@ export default async function ParticipantDashboardPage({ params }: Params) {
         members={reg.members}
         desk={reg.desk}
         qrDataUrl={qrDataUrl}
+        certificates={certificates}
       />
     </main>
   );

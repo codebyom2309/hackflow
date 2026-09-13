@@ -15,11 +15,11 @@ const publicPaths = [
   "/join",
 ];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Allow public paths
-  if (publicPaths.some((path) => pathname.startsWith(path))) {
+  if (publicPaths.some((path) => pathname === path || (path !== "/" && pathname.startsWith(path)))) {
     return NextResponse.next();
   }
 
@@ -42,7 +42,7 @@ export function middleware(request: NextRequest) {
     request.cookies.get("authjs.session-token")?.value ||
     request.cookies.get("__Secure-authjs.session-token")?.value;
 
-  if (!token && protectedPaths.some((path) => pathname.startsWith(path))) {
+  if (!token && protectedPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`))) {
     const signInUrl = new URL("/auth/signin", request.url);
     signInUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(signInUrl);
@@ -53,12 +53,6 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
     "/((?!_next/static|_next/image|favicon.ico).*)",
   ],
 };

@@ -33,7 +33,46 @@ export async function GET(_request: Request, { params }: Params) {
       );
     }
 
-    return NextResponse.json({ data: event });
+    const { getUserEventRole } = await import("@/lib/auth/guards");
+    let userRole = await getUserEventRole(session.user.id, event.id);
+
+    if (!userRole) {
+      const { db } = await import("@/lib/db");
+      const { teams, teamMembers } = await import("@/lib/db/schema");
+      const { eq, and, or } = await import("drizzle-orm");
+
+      const userEmail = session.user.email;
+      const isLeader = await db.query.teams.findFirst({
+        where: and(
+          eq(teams.eventId, event.id),
+          userEmail
+            ? or(eq(teams.leaderId, session.user.id), eq(teams.leaderEmail, userEmail))
+            : eq(teams.leaderId, session.user.id)
+        ),
+      });
+
+      if (isLeader) {
+        userRole = "PARTICIPANT" as any;
+      } else if (userEmail) {
+        const memberRows = await db.query.teamMembers.findMany({
+          where: eq(teamMembers.email, userEmail),
+        });
+        if (memberRows.length > 0) {
+          const { inArray } = await import("drizzle-orm");
+          const matchingTeam = await db.query.teams.findFirst({
+            where: and(
+              eq(teams.eventId, event.id),
+              inArray(teams.id, memberRows.map((m) => m.teamId))
+            ),
+          });
+          if (matchingTeam) {
+            userRole = "PARTICIPANT" as any;
+          }
+        }
+      }
+    }
+
+    return NextResponse.json({ data: { ...event, userRole } });
   } catch (error) {
     console.error("[GET /api/events/[slug]]", error);
     return NextResponse.json(
@@ -70,6 +109,12 @@ export async function PATCH(request: Request, { params }: Params) {
     await requireRole(session.user.id, event.id, "ORGANIZER");
 
     const body = await request.json();
+
+    if (body.status && body.status !== event.status) {
+      const { changeEventStatus } = await import("@/lib/services/event.service");
+      await changeEventStatus(event.id, body.status);
+    }
+
     const validated = updateEventSchema.parse(body);
     await updateEvent(event.id, validated);
 

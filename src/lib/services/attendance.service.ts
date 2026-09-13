@@ -51,18 +51,44 @@ export async function recordCheckIn(
     isActive: true,
   });
 
+  // Auto-allocate desk on physical check-in if not assigned
+  let desk: { deskNumber: number; roomName: string } | null = null;
+  if (!team.deskId) {
+    const { allocateDesk } = await import("./desk.service");
+    const allocated = await allocateDesk(eventId, team.id, team.memberCount);
+    if (allocated) {
+      desk = {
+        deskNumber: allocated.deskNumber,
+        roomName: allocated.roomName,
+      };
+    }
+  } else {
+    const d = await db.query.desks.findFirst({ where: eq(desks.id, team.deskId) });
+    if (d) {
+      const r = await db.query.rooms.findFirst({ where: eq(rooms.id, d.roomId) });
+      desk = {
+        deskNumber: d.deskNumber,
+        roomName: r?.name || "Main Hall",
+      };
+    }
+  }
+
   // Update team status to CHECKED_IN if not already active
   if (team.status === "REGISTERED" || team.status === "WAITLISTED") {
     await db
       .update(teams)
-      .set({ status: "CHECKED_IN" })
+      .set({ status: desk ? "ACTIVE" : "CHECKED_IN" })
       .where(eq(teams.id, teamId));
   }
 
   return {
     alreadyCheckedIn: false,
     recordId: id,
-    team,
+    team: {
+      ...team,
+      status: desk ? "ACTIVE" : "CHECKED_IN",
+    },
+    desk,
   };
 }
 

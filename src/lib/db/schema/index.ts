@@ -20,8 +20,10 @@ export {
   judgmentScores,
   judgmentCorrections,
 } from "./judging";
+export { judgeAssignments } from "./judge-assignments";
 export { submissions } from "./submissions";
 export { shortlists } from "./shortlists";
 export { certificates } from "./certificates";
+export { certificateTemplates } from "./certificate-templates";
 export { announcements } from "./announcements";
 export { auditLogs } from "./audit-logs";

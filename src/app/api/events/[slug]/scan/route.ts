@@ -78,36 +78,27 @@ export async function POST(request: Request, { params }: Params) {
     const scannerRole = membership.role;
 
     if (scannerRole === "COORDINATOR" || scannerRole === "ORGANIZER") {
-      // Check-in flow: create attendance record
-      const attendanceId = crypto.randomUUID();
-      await db.insert(attendanceRecords).values({
-        id: attendanceId,
-        teamId: team.id,
-        eventId: event.id,
-        checkedInBy: session.user.id,
-        checkInMethod: "QR_SCAN",
-        isActive: true,
-      });
-
-      // Update team status if needed
-      if (team.status === "REGISTERED" || team.status === "WAITLISTED") {
-        await db
-          .update(teams)
-          .set({ status: "CHECKED_IN" })
-          .where(eq(teams.id, team.id));
-      }
+      const { recordCheckIn } = await import("@/lib/services/attendance.service");
+      const checkInResult = await recordCheckIn(
+        event.id,
+        team.id,
+        session.user.id,
+        "QR_SCAN"
+      );
 
       return NextResponse.json({
         data: {
           action: "CHECK_IN",
+          alreadyCheckedIn: checkInResult.alreadyCheckedIn,
           team: {
             id: team.id,
             name: team.name,
             memberCount: team.memberCount,
-            status: "CHECKED_IN",
-            deskId: team.deskId,
+            status: checkInResult.team.status,
+            deskId: checkInResult.team.deskId,
           },
-          attendanceId,
+          desk: checkInResult.desk,
+          attendanceId: checkInResult.recordId || (checkInResult as any).record?.id,
         },
       });
     }

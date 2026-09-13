@@ -1,6 +1,7 @@
 import {
   mysqlTable,
   varchar,
+  int,
   timestamp,
   mysqlEnum,
   index,
@@ -28,6 +29,8 @@ export const eventMemberships = mysqlTable(
       "PARTICIPANT",
     ]).notNull(),
     invitationId: varchar("invitation_id", { length: 36 }),
+    lastActiveAt: timestamp("last_active_at"),
+    actionsCount: int("actions_count").notNull().default(0),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow().onUpdateNow(),
   },

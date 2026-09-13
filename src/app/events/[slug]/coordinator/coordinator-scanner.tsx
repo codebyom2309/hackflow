@@ -60,8 +60,28 @@ export default function CoordinatorScanner({
   } | null>(null);
 
   const [processingManualId, setProcessingManualId] = useState<string | null>(null);
+  const [personalScans, setPersonalScans] = useState(0);
   const scannerRef = useRef<unknown>(null);
   const isScanningRef = useRef(false);
+
+  // Send periodic presence heartbeat
+  useEffect(() => {
+    fetch(`/api/events/${event.slug}/staff/heartbeat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "scanner_opened" }),
+    }).catch(() => {});
+
+    const interval = setInterval(() => {
+      fetch(`/api/events/${event.slug}/staff/heartbeat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "ping" }),
+      }).catch(() => {});
+    }, 45000);
+
+    return () => clearInterval(interval);
+  }, [event.slug]);
 
   // Refresh roster
   const refreshRoster = useCallback(async () => {
@@ -94,11 +114,24 @@ export default function CoordinatorScanner({
 
         if (res.ok) {
           const team = json.data?.team;
+          const desk = json.data?.desk;
+          const already = json.data?.alreadyCheckedIn;
+
+          if (!already) {
+            setPersonalScans((prev) => prev + 1);
+            fetch(`/api/events/${event.slug}/staff/heartbeat`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ action: "qr_scan" }),
+            }).catch(() => {});
+          }
+
           setScanResult({
-            status: "success",
-            message: `Check-in successful!`,
+            status: already ? "warning" : "success",
+            message: already ? "Already checked in" : "Check-in verified!",
             teamName: team?.name,
-            deskNumber: team?.deskId ? 1 : undefined,
+            deskNumber: desk?.deskNumber,
+            roomName: desk?.roomName,
           });
           await refreshRoster();
         } else {
@@ -243,6 +276,10 @@ export default function CoordinatorScanner({
             <span className={styles.statVal}>{stats.rate.toFixed(0)}%</span>
             <span className={styles.statLabel}>Check-in Rate</span>
           </div>
+          <div className={styles.statItem}>
+            <span className={`${styles.statVal} ${styles.valGreen}`}>{personalScans}</span>
+            <span className={styles.statLabel}>My Scans</span>
+          </div>
         </div>
 
         <div className={styles.progressBar}>
@@ -323,6 +360,11 @@ export default function CoordinatorScanner({
                   {scanResult.teamName && (
                     <p className={styles.feedbackTeam}>
                       Team: <strong>{scanResult.teamName}</strong>
+                    </p>
+                  )}
+                  {scanResult.deskNumber && (
+                    <p style={{ marginTop: "6px", fontSize: "13px", color: "var(--color-accent, #6366f1)", fontWeight: 700 }}>
+                      📍 Workspace: Desk #{scanResult.deskNumber} {scanResult.roomName ? `(${scanResult.roomName})` : ""}
                     </p>
                   )}
                 </div>

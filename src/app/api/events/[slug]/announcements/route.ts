@@ -14,6 +14,8 @@ const createSchema = z.object({
   content: z.string().min(1),
   priority: z.enum(["LOW", "NORMAL", "HIGH", "URGENT"]).optional(),
   targetRole: z.enum(["ALL", "PARTICIPANT", "COORDINATOR", "JUDGE"]).optional(),
+  targetVenue: z.string().optional(),
+  targetTeamStatus: z.string().optional(),
 });
 
 type Params = { params: Promise<{ slug: string }> };
