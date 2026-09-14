@@ -68,12 +68,17 @@ export default async function EventPage({ params }: Params) {
     }
   }
 
+  // Fetch organizer-published participant experience config
+  const { getParticipantExperience } = await import("@/lib/services/participant-experience.service");
+  const experienceData = await getParticipantExperience(event.id);
+
   // Default: Event portal for authenticated users wishing to register or view event
   return (
-    <main className="container" style={{ paddingTop: "var(--spacing-xl)" }}>
+    <main className="container" style={{ paddingTop: "var(--spacing-xl)", paddingBottom: "var(--spacing-xxl)" }}>
       <EventPortal
         event={event}
         userRole={role}
+        experienceConfig={experienceData?.config || null}
         currentUser={{
           id: session.user.id,
           name: session.user.name || "",

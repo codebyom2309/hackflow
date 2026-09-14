@@ -26,4 +26,5 @@ export { shortlists } from "./shortlists";
 export { certificates } from "./certificates";
 export { certificateTemplates } from "./certificate-templates";
 export { announcements } from "./announcements";
+export { helpRequests, helpRequestMessages } from "./help-requests";
 export { auditLogs } from "./audit-logs";

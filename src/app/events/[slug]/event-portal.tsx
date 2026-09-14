@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import styles from "./event-portal.module.css";
+import type { ParticipantExperienceConfig } from "@/lib/types/participant-experience";
 
 interface EventPortalProps {
   event: {
@@ -21,6 +22,7 @@ interface EventPortalProps {
     externalFormUrl?: string | null;
   };
   userRole: string | null;
+  experienceConfig?: ParticipantExperienceConfig | null;
   currentUser?: {
     id: string;
     name: string;
@@ -45,7 +47,12 @@ const THEME_OPTIONS = [
   "Open Innovation",
 ];
 
-export default function EventPortal({ event, userRole, currentUser }: EventPortalProps) {
+export default function EventPortal({
+  event,
+  userRole,
+  experienceConfig,
+  currentUser,
+}: EventPortalProps) {
   // Step 1: Team Info
   const [teamName, setTeamName] = useState("");
   const [college, setCollege] = useState("");
@@ -69,7 +76,9 @@ export default function EventPortal({ event, userRole, currentUser }: EventPorta
   ]);
 
   const [registering, setRegistering] = useState(false);
-  const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(
+    null
+  );
   const [checkingSync, setCheckingSync] = useState(false);
 
   function handleSizeChange(newSize: number) {
@@ -145,7 +154,7 @@ export default function EventPortal({ event, userRole, currentUser }: EventPorta
       if (res.ok) {
         setFeedback({
           type: "success",
-          message: "Registration successful! Table desk locked. Opening your team dashboard...",
+          message: "🎉 Team registered successfully! Redirecting to your team companion pass...",
         });
         setTimeout(() => {
           window.location.href = `/events/${event.slug}/dashboard`;
@@ -203,7 +212,7 @@ export default function EventPortal({ event, userRole, currentUser }: EventPorta
 
   return (
     <div className={styles.container}>
-      {/* Event Header Banner */}
+      {/* Event Hero Banner */}
       <div className={styles.headerCard}>
         <div className={styles.headerGlow} />
         <div className={styles.statusRow}>
@@ -212,20 +221,28 @@ export default function EventPortal({ event, userRole, currentUser }: EventPorta
           {userRole && <span className={styles.roleBadge}>Role: {userRole}</span>}
         </div>
 
-        <h1 className={styles.title}>{event.title}</h1>
-        {event.description && <p className={styles.description}>{event.description}</p>}
+        <h1 className={styles.title}>
+          {experienceConfig?.heroTitle || event.title}
+        </h1>
+        <p className={styles.description}>
+          {experienceConfig?.heroTagline || event.description || "Welcome to HackFlow"}
+        </p>
 
         <div className={styles.metaRow}>
           {event.eventStarts && (
             <div className={styles.metaItem}>
               <span className={styles.metaLabel}>Starts</span>
-              <span className={styles.metaValue}>{new Date(event.eventStarts).toLocaleString()}</span>
+              <span className={styles.metaValue}>
+                {new Date(event.eventStarts).toLocaleString()}
+              </span>
             </div>
           )}
           {event.eventEnds && (
             <div className={styles.metaItem}>
               <span className={styles.metaLabel}>Ends</span>
-              <span className={styles.metaValue}>{new Date(event.eventEnds).toLocaleString()}</span>
+              <span className={styles.metaValue}>
+                {new Date(event.eventEnds).toLocaleString()}
+              </span>
             </div>
           )}
           {event.maxTeams && (
@@ -236,14 +253,48 @@ export default function EventPortal({ event, userRole, currentUser }: EventPorta
           )}
           <div className={styles.metaItem}>
             <span className={styles.metaLabel}>Team Limits</span>
-            <span className={styles.metaValue}>{minSize} – {maxSize} Members</span>
+            <span className={styles.metaValue}>
+              {minSize} – {maxSize} Members
+            </span>
           </div>
         </div>
       </div>
 
       {feedback && (
-        <div className={`${styles.feedback} ${feedback.type === "success" ? styles.success : styles.error}`}>
+        <div
+          className={`${styles.feedback} ${
+            feedback.type === "success" ? styles.success : styles.error
+          }`}
+        >
           {feedback.message}
+        </div>
+      )}
+
+      {/* Organizer Configured Venue Logistics Section */}
+      {experienceConfig?.venueGuide && (
+        <div className={styles.venueGuideCard}>
+          <h3 className={styles.sectionHeading}>🏢 Venue & Hacker Logistics</h3>
+          <div className={styles.venueGrid}>
+            <div className={styles.venueItem}>
+              <span className={styles.venueItemLabel}>Location / Hall:</span>
+              <strong>{experienceConfig.venueGuide.buildingName || "Main Hall"}</strong>
+            </div>
+            <div className={styles.venueItem}>
+              <span className={styles.venueItemLabel}>Floor & Lab:</span>
+              <strong>{experienceConfig.venueGuide.floorInfo || "Floor 2"}</strong>
+            </div>
+            <div className={styles.venueItem}>
+              <span className={styles.venueItemLabel}>Event Wi-Fi:</span>
+              <strong>
+                {experienceConfig.venueGuide.wifiSsid || "Venue-Wi-Fi"} (PW:{" "}
+                {experienceConfig.venueGuide.wifiPassword || "None"})
+              </strong>
+            </div>
+            <div className={styles.venueItem}>
+              <span className={styles.venueItemLabel}>Food & Catering:</span>
+              <strong>{experienceConfig.venueGuide.foodTimings || "Provided on-site"}</strong>
+            </div>
+          </div>
         </div>
       )}
 
@@ -299,193 +350,217 @@ export default function EventPortal({ event, userRole, currentUser }: EventPorta
           </div>
         </div>
       ) : isRegistrationOpen ? (
-        /* NATIVE MULTI-MEMBER REGISTRATION VIEW */
-        <div className={styles.regCard}>
-          <div className={styles.regHeader}>
-            <h2 className={styles.regTitle}>Register Your Team</h2>
-            <p className={styles.regSubtitle}>
-              Provide your team roster to reserve your physical desk and generate your universal QR pass.
+        /* NATIVE REGISTRATION FORM */
+        <form onSubmit={handleRegister} className={styles.form}>
+          <div className={styles.formHeader}>
+            <h2 className={styles.formTitle}>Register Your Team</h2>
+            <p className={styles.formSubtitle}>
+              Automatic desk pre-allotment will lock a physical table for your team upon registration.
             </p>
           </div>
 
-          <form onSubmit={handleRegister} className={styles.form}>
-            {/* Section 1: Team & Project Scope */}
-            <div className={styles.formSection}>
-              <div className={styles.sectionHeader}>
-                <span className={styles.sectionNumber}>1</span>
-                <span className={styles.sectionName}>Team Profile & Track</span>
-              </div>
-
-              <div className={styles.grid2}>
-                <div className={styles.field}>
-                  <label className={styles.label}>Team Name *</label>
-                  <input
-                    type="text"
-                    className={styles.input}
-                    placeholder="e.g. Binary Beasts"
-                    value={teamName}
-                    onChange={(e) => setTeamName(e.target.value)}
-                    required
-                    minLength={2}
-                    maxLength={100}
-                  />
-                </div>
-
-                <div className={styles.field}>
-                  <label className={styles.label}>College / University *</label>
-                  <input
-                    type="text"
-                    className={styles.input}
-                    placeholder="e.g. University of Engineering & Management"
-                    value={college}
-                    onChange={(e) => setCollege(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className={styles.grid2}>
-                <div className={styles.field}>
-                  <label className={styles.label}>Domain / Hackathon Track</label>
-                  <select
-                    className={styles.select}
-                    value={theme}
-                    onChange={(e) => setTheme(e.target.value)}
-                  >
-                    {THEME_OPTIONS.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className={styles.field}>
-                  <label className={styles.label}>Squad Size ({minSize} to {maxSize} members)</label>
-                  <div className={styles.sizePills}>
-                    {Array.from({ length: maxSize - minSize + 1 }, (_, idx) => minSize + idx).map((size) => (
-                      <button
-                        key={size}
-                        type="button"
-                        className={`${styles.sizePill} ${teamSize === size ? styles.sizePillActive : ""}`}
-                        onClick={() => handleSizeChange(size)}
-                      >
-                        {size} Hackers
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Section 2: Team Leader */}
-            <div className={styles.formSection}>
-              <div className={styles.sectionHeader}>
-                <span className={styles.sectionNumber}>2</span>
-                <span className={styles.sectionName}>Team Leader (Primary Contact)</span>
-              </div>
-
-              <div className={styles.grid2}>
-                <div className={styles.field}>
-                  <label className={styles.label}>Leader Full Name *</label>
-                  <input
-                    type="text"
-                    className={styles.input}
-                    placeholder="Full name"
-                    value={leaderName}
-                    onChange={(e) => setLeaderName(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className={styles.field}>
-                  <label className={styles.label}>Leader Email Address *</label>
-                  <input
-                    type="email"
-                    className={styles.input}
-                    placeholder="leader@example.com"
-                    value={leaderEmail}
-                    onChange={(e) => setLeaderEmail(e.target.value)}
-                    required
-                  />
-                </div>
+          {/* Step 1: Team Basics */}
+          <div className={styles.formSection}>
+            <h3 className={styles.sectionHeading}>1. Team Information</h3>
+            <div className={styles.fieldGrid}>
+              <div className={styles.field}>
+                <label className={styles.label}>Team Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. ByteCraft"
+                  value={teamName}
+                  onChange={(e) => setTeamName(e.target.value)}
+                  className={styles.input}
+                />
               </div>
 
               <div className={styles.field}>
-                <label className={styles.label}>Leader Phone / WhatsApp *</label>
+                <label className={styles.label}>College / Institution</label>
+                <input
+                  type="text"
+                  placeholder="e.g. MIT, Stanford, IIT"
+                  value={college}
+                  onChange={(e) => setCollege(e.target.value)}
+                  className={styles.input}
+                />
+              </div>
+
+              <div className={styles.field}>
+                <label className={styles.label}>Chosen Track / Theme</label>
+                <select
+                  value={theme}
+                  onChange={(e) => setTheme(e.target.value)}
+                  className={styles.select}
+                >
+                  {THEME_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className={styles.field}>
+                <label className={styles.label}>Total Team Size ({minSize} - {maxSize}) *</label>
+                <div className={styles.sizeSelector}>
+                  {Array.from({ length: maxSize - minSize + 1 }, (_, i) => minSize + i).map((size) => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => handleSizeChange(size)}
+                      className={`${styles.sizeBtn} ${teamSize === size ? styles.sizeBtnActive : ""}`}
+                    >
+                      {size} {size === 1 ? "Hacker" : "Hackers"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Step 2: Leader Info */}
+          <div className={styles.formSection}>
+            <h3 className={styles.sectionHeading}>2. Team Leader Details</h3>
+            <div className={styles.fieldGrid}>
+              <div className={styles.field}>
+                <label className={styles.label}>Leader Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Alex Turing"
+                  value={leaderName}
+                  onChange={(e) => setLeaderName(e.target.value)}
+                  className={styles.input}
+                />
+              </div>
+
+              <div className={styles.field}>
+                <label className={styles.label}>Leader Email Address *</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="alex@domain.com"
+                  value={leaderEmail}
+                  onChange={(e) => setLeaderEmail(e.target.value)}
+                  className={styles.input}
+                />
+              </div>
+
+              <div className={styles.field}>
+                <label className={styles.label}>Leader Phone (WhatsApp) *</label>
                 <input
                   type="tel"
-                  className={styles.input}
-                  placeholder="+91 98765 43210 (For table calls & urgent notices)"
+                  required
+                  placeholder="+1 555-0199"
                   value={leaderPhone}
                   onChange={(e) => setLeaderPhone(e.target.value)}
-                  required
+                  className={styles.input}
                 />
               </div>
             </div>
+          </div>
 
-            {/* Section 3: Dynamic Members */}
-            {teamSize > 1 && (
-              <div className={styles.formSection}>
-                <div className={styles.sectionHeader}>
-                  <span className={styles.sectionNumber}>3</span>
-                  <span className={styles.sectionName}>Team Members ({teamSize - 1} Hackers)</span>
-                </div>
-
-                {Array.from({ length: teamSize - 1 }).map((_, idx) => {
-                  const member = members[idx] || { name: "", email: "", phone: "" };
-                  return (
-                    <div key={idx} className={styles.memberCard}>
-                      <div className={styles.memberCardTitle}>
-                        <span>👤 Member {idx + 2}</span>
-                      </div>
-
-                      <div className={styles.grid2}>
-                        <div className={styles.field}>
-                          <label className={styles.label}>Member Name *</label>
-                          <input
-                            type="text"
-                            className={styles.input}
-                            placeholder={`Member ${idx + 2} full name`}
-                            value={member.name}
-                            onChange={(e) => handleMemberChange(idx, "name", e.target.value)}
-                            required
-                          />
-                        </div>
-
-                        <div className={styles.field}>
-                          <label className={styles.label}>Member Email (For their pass login)</label>
-                          <input
-                            type="email"
-                            className={styles.input}
-                            placeholder="member@example.com"
-                            value={member.email}
-                            onChange={(e) => handleMemberChange(idx, "email", e.target.value)}
-                          />
-                        </div>
-                      </div>
+          {/* Step 3: Members */}
+          {teamSize > 1 && (
+            <div className={styles.formSection}>
+              <h3 className={styles.sectionHeading}>3. Team Members ({teamSize - 1} Additional)</h3>
+              <div className={styles.membersList}>
+                {Array.from({ length: teamSize - 1 }).map((_, idx) => (
+                  <div key={idx} className={styles.memberCard}>
+                    <span className={styles.memberTag}>Member #{idx + 2}</span>
+                    <div className={styles.memberGrid}>
+                      <input
+                        type="text"
+                        placeholder="Full Name"
+                        value={members[idx]?.name || ""}
+                        onChange={(e) => handleMemberChange(idx, "name", e.target.value)}
+                        className={styles.input}
+                      />
+                      <input
+                        type="email"
+                        placeholder="Email Address"
+                        value={members[idx]?.email || ""}
+                        onChange={(e) => handleMemberChange(idx, "email", e.target.value)}
+                        className={styles.input}
+                      />
+                      <input
+                        type="tel"
+                        placeholder="Phone Number (Optional)"
+                        value={members[idx]?.phone || ""}
+                        onChange={(e) => handleMemberChange(idx, "phone", e.target.value)}
+                        className={styles.input}
+                      />
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
-            )}
+            </div>
+          )}
 
+          <div className={styles.submitSection}>
             <button
               type="submit"
-              disabled={registering || !teamName.trim() || !leaderEmail.trim()}
-              className={styles.submitBtn}
+              disabled={registering}
+              className={styles.registerBtn}
             >
-              {registering ? "Locking Table & Registering..." : "Submit Registration & Lock Desk →"}
+              {registering ? "Securing Table & Registering..." : `Confirm & Register Team (${teamSize} Members) →`}
             </button>
-          </form>
-        </div>
+          </div>
+        </form>
       ) : (
-        <div className={styles.noticeCard}>
-          <div className={styles.noticeIcon}>🔒</div>
-          <h3 className={styles.noticeTitle}>Registration Closed</h3>
-          <p className={styles.noticeText}>
-            Registration for this event is currently <strong>{event.status.replace(/_/g, " ").toLowerCase()}</strong>. Please reach out to the event organizers for inquiries.
-          </p>
+        <div className={styles.closedCard}>
+          <h3>Registration is currently closed for this event</h3>
+          <p>Please check back later or contact event organizers for inquiries.</p>
+        </div>
+      )}
+
+      {/* Schedule Timeline Section */}
+      {experienceConfig?.schedule && experienceConfig.schedule.length > 0 && (
+        <div className={styles.scheduleSection}>
+          <h3 className={styles.sectionHeading}>⏱️ Hackathon Timeline</h3>
+          <div className={styles.scheduleGrid}>
+            {experienceConfig.schedule.map((item) => (
+              <div key={item.id} className={styles.scheduleCard}>
+                <span className={styles.scheduleTime}>{item.time}</span>
+                <div>
+                  <strong className={styles.scheduleTitle}>{item.title}</strong>
+                  {item.phase && <span className={styles.schedulePhase}>{item.phase}</span>}
+                  {item.description && <p className={styles.scheduleDesc}>{item.description}</p>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Rules & Guidelines */}
+      {experienceConfig?.rules && experienceConfig.rules.length > 0 && (
+        <div className={styles.rulesSection}>
+          <h3 className={styles.sectionHeading}>📜 Hackathon Rules & Guidelines</h3>
+          <div className={styles.rulesGrid}>
+            {experienceConfig.rules.map((rule) => (
+              <div key={rule.id} className={styles.ruleCard}>
+                <strong>{rule.title}</strong>
+                <p>{rule.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* FAQs */}
+      {experienceConfig?.faqs && experienceConfig.faqs.length > 0 && (
+        <div className={styles.faqsSection}>
+          <h3 className={styles.sectionHeading}>❓ Frequently Asked Questions</h3>
+          <div className={styles.faqsGrid}>
+            {experienceConfig.faqs.map((faq) => (
+              <div key={faq.id} className={styles.faqCard}>
+                <strong>{faq.question}</strong>
+                <p>{faq.answer}</p>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

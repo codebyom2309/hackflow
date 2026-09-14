@@ -44,6 +44,7 @@ export const events = mysqlTable(
     syncIntervalMinutes: int("sync_interval_minutes").notNull().default(5),
     formSchema: json("form_schema"), // Dynamic form definition
     participantNotice: text("participant_notice"),
+    participantExperienceConfig: json("participant_experience_config"), // Configurable participant-facing portal/website definition
 
     // Timing
     registrationOpens: timestamp("registration_opens"),

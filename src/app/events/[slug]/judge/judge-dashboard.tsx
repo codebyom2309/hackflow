@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import styles from "./judge.module.css";
-import { useToast } from "@/components/ui";
+import { useToast } from "@/components/ui/Toast";
 
 interface RoundInfo {
   id: string;
@@ -18,6 +18,13 @@ interface RosterItem {
   status: string;
   isCheckedIn: boolean;
   desk: { deskNumber: number; roomName: string } | null;
+  projectName?: string | null;
+  projectDescription?: string | null;
+  githubUrl?: string | null;
+  demoUrl?: string | null;
+  pptUrl?: string | null;
+  problemStatement?: string | null;
+  college?: string | null;
 }
 
 interface EventInfo {
@@ -30,64 +37,71 @@ interface JudgeDashboardProps {
   event: EventInfo;
   rounds: RoundInfo[];
   roster: RosterItem[];
-  assignedTeamIds: string[] | null; // null = no assignments (see all), string[] = filtered
+  assignedTeamIds: string[] | null;
 }
 
-export default function JudgeDashboard({ event, rounds, roster, assignedTeamIds }: JudgeDashboardProps) {
-  const toast = useToast();
+export default function JudgeDashboard({
+  event,
+  rounds,
+  roster,
+  assignedTeamIds,
+}: JudgeDashboardProps) {
+  const { toast } = useToast();
 
-  // Filter roster to assigned teams only (when assignments exist)
-  const visibleRoster = assignedTeamIds !== null
-    ? roster.filter((t) => assignedTeamIds.includes(t.teamId))
-    : roster;
-
-  const [activeTab, setActiveTab] = useState<"scan" | "roster">("scan");
+  const [activeFilter, setActiveFilter] = useState<"all" | "pending" | "evaluated" | "scan">("pending");
   const [selectedRound, setSelectedRound] = useState<RoundInfo | null>(
     rounds.find((r) => r.status === "JUDGING") || rounds[0] || null
   );
-  const [scanning, setScanning] = useState(false);
+
   const [evaluatedIds, setEvaluatedIds] = useState<Set<string>>(new Set());
   const [progress, setProgress] = useState({ total: 0, evaluated: 0, rate: 0 });
-  const [scanResult, setScanResult] = useState<{
-    status: "success" | "error" | "warning";
-    message: string;
-    teamName?: string;
-  } | null>(null);
+  const [activeRoomContext, setActiveRoomContext] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+
+  // Evaluation Sheet state
   const [evalSheet, setEvalSheet] = useState<{
     teamId: string;
     teamName: string;
-    criteria: Array<{ id: string; name: string; maxPoints: number; score: number }>;
-  } | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [search, setSearch] = useState("");
-  const isScanningRef = useRef(false);
-  const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [lastSubmitMeta, setLastSubmitMeta] = useState<{
-    teamId: string;
-    roundId: string;
-    canUndo: boolean;
+    deskInfo?: string | null;
+    project?: {
+      title?: string | null;
+      description?: string | null;
+      githubUrl?: string | null;
+      demoUrl?: string | null;
+      pptUrl?: string | null;
+      problemStatement?: string | null;
+      college?: string | null;
+    };
+    criteria: Array<{
+      id: string;
+      name: string;
+      description?: string | null;
+      maxPoints: number;
+      weight: string | number;
+      score: number;
+    }>;
+    generalComment: string;
   } | null>(null);
 
-  // Load criteria for selected round
-  const loadCriteria = useCallback(async (teamId: string, teamName: string) => {
-    if (!selectedRound) return;
-    try {
-      const res = await fetch(
-        `/api/events/${event.slug}/rounds/${selectedRound.id}/criteria`
-      );
-      if (!res.ok) return;
-      const json = await res.json();
-      const criteria = (json.data || []).map((c: { id: string; name: string; maxPoints: number }) => ({
-        id: c.id,
-        name: c.name,
-        maxPoints: c.maxPoints,
-        score: Math.round(c.maxPoints * 0.5), // Default 50%
-      }));
-      setEvalSheet({ teamId, teamName, criteria });
-    } catch {
-      console.error("Failed to load criteria");
-    }
-  }, [event.slug, selectedRound]);
+  const [submitting, setSubmitting] = useState(false);
+  const [undoMeta, setUndoMeta] = useState<{
+    teamId: string;
+    teamName: string;
+    roundId: string;
+    scoresPayload: any;
+    timer: NodeJS.Timeout | null;
+    secondsLeft: number;
+  } | null>(null);
+
+  const isScanningRef = useRef(false);
+  const scannerRef = useRef<unknown>(null);
+
+  // Filter roster by assignments if present
+  const baseRoster = useMemo(() => {
+    return assignedTeamIds !== null
+      ? roster.filter((t) => assignedTeamIds.includes(t.teamId))
+      : roster;
+  }, [assignedTeamIds, roster]);
 
   // Refresh judge progress
   const refreshProgress = useCallback(async () => {
@@ -102,13 +116,71 @@ export default function JudgeDashboard({ event, rounds, roster, assignedTeamIds 
         setEvaluatedIds(new Set(json.data.evaluatedTeamIds || []));
       }
     } catch {
-      console.error("Failed to refresh progress");
+      console.error("Failed to refresh judge progress");
     }
   }, [event.slug, selectedRound]);
 
   useEffect(() => {
     refreshProgress();
   }, [refreshProgress]);
+
+  // Load criteria schema and open scoring sheet with project info
+  const openEvaluationSheet = useCallback(
+    async (team: RosterItem | { id: string; name: string; desk?: { deskNumber: number; roomName: string } | null; [key: string]: any }) => {
+      if (!selectedRound) return;
+
+      const teamId = (team as any).teamId || (team as any).id;
+      const teamName = (team as any).teamName || (team as any).name;
+
+      // Track active physical room for smart sorting
+      if (team.desk?.roomName) {
+        setActiveRoomContext(team.desk.roomName);
+      }
+
+      // Check if team info has project data, else find in baseRoster
+      const fullTeam = baseRoster.find((t) => t.teamId === teamId) || team;
+
+      try {
+        const res = await fetch(
+          `/api/events/${event.slug}/rounds/${selectedRound.id}/criteria`
+        );
+        if (!res.ok) {
+          toast.error("Failed to load scoring criteria for this round");
+          return;
+        }
+
+        const json = await res.json();
+        const criteria = (json.data || []).map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          description: c.description || null,
+          maxPoints: c.maxPoints || 10,
+          weight: c.weight || 1,
+          score: Math.round((c.maxPoints || 10) * 0.5), // 50% default
+        }));
+
+        setEvalSheet({
+          teamId,
+          teamName,
+          deskInfo: fullTeam.desk ? `${fullTeam.desk.roomName} — Desk #${fullTeam.desk.deskNumber}` : null,
+          project: {
+            title: fullTeam.projectName || fullTeam.problemStatement || null,
+            description: fullTeam.projectDescription || null,
+            githubUrl: fullTeam.githubUrl || null,
+            demoUrl: fullTeam.demoUrl || null,
+            pptUrl: fullTeam.pptUrl || null,
+            problemStatement: fullTeam.problemStatement || null,
+            college: fullTeam.college || null,
+          },
+          criteria,
+          generalComment: "",
+        });
+      } catch {
+        toast.error("Network error while loading criteria");
+      }
+    },
+    [baseRoster, event.slug, selectedRound, toast]
+  );
 
   // QR scan handler
   const handleScan = useCallback(
@@ -127,360 +199,657 @@ export default function JudgeDashboard({ event, rounds, roster, assignedTeamIds 
         if (res.ok) {
           const team = json.data?.team;
           if (!team) {
-            setScanResult({ status: "error", message: "Team not found" });
+            toast.error("Scanned QR is not associated with a team");
             return;
           }
+
           if (evaluatedIds.has(team.id)) {
-            setScanResult({
-              status: "warning",
-              message: "Already evaluated this team",
-              teamName: team.name,
-            });
+            toast.warning(`Team ${team.name} has already been evaluated by you!`);
             return;
           }
-          const notAssigned = assignedTeamIds !== null && !assignedTeamIds.includes(team.id);
-          setScanResult({
-            status: notAssigned ? "warning" : "success",
-            message: notAssigned ? "Note: Team not in your assigned list" : "Team found!",
-            teamName: team.name,
-          });
-          await loadCriteria(team.id, team.name);
+
+          openEvaluationSheet(team);
         } else {
-          setScanResult({ status: "error", message: json.error || "Invalid QR" });
+          toast.error(json.error || "Invalid QR pass");
         }
       } catch {
-        setScanResult({ status: "error", message: "Network error" });
+        toast.error("Scan error");
       } finally {
-        setTimeout(() => { isScanningRef.current = false; }, 2000);
+        setTimeout(() => {
+          isScanningRef.current = false;
+        }, 1500);
       }
     },
-    [event.slug, selectedRound, evaluatedIds, loadCriteria]
+    [event.slug, selectedRound, evaluatedIds, openEvaluationSheet, toast]
   );
 
-  // Camera scanner
+  // Initialize camera scanner when scan tab is active
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let html5QrCode: any = null;
-    if (activeTab === "scan" && scanning) {
-      import("html5-qrcode").then(({ Html5Qrcode }) => {
-        const el = document.getElementById("judge-qr-reader");
-        if (!el) return;
-        html5QrCode = new Html5Qrcode("judge-qr-reader");
-        html5QrCode.start(
-          { facingMode: "environment" },
-          { fps: 10, qrbox: { width: 220, height: 220 } },
-          handleScan,
-          () => {}
-        ).catch(() => setScanning(false));
-      });
+
+    if (activeFilter === "scan" && !evalSheet) {
+      import("html5-qrcode")
+        .then(({ Html5Qrcode }) => {
+          html5QrCode = new Html5Qrcode("judge-qr-reader");
+          scannerRef.current = html5QrCode;
+
+          html5QrCode
+            .start(
+              { facingMode: "environment" },
+              { fps: 10, qrbox: { width: 250, height: 250 } },
+              (decodedText: string) => handleScan(decodedText),
+              () => {} // silent scan frame
+            )
+            .catch(() => {
+              toast.error("Camera access failed or unavailable");
+            });
+        })
+        .catch(() => {
+          toast.error("Failed to load camera scanner");
+        });
     }
+
     return () => {
-      if (html5QrCode) {
+      if (scannerRef.current) {
         try {
-          html5QrCode.stop().then(() => html5QrCode.clear());
-        } catch { /* cleanup */ }
+          (scannerRef.current as any).stop().catch(() => {});
+        } catch {
+          // ignore
+        }
       }
     };
-  }, [activeTab, scanning, handleScan]);
+  }, [activeFilter, evalSheet, handleScan, toast]);
 
-  // Update score in eval sheet
-  function setScore(criteriaId: string, score: number) {
-    setEvalSheet((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        criteria: prev.criteria.map((c) =>
-          c.id === criteriaId ? { ...c, score } : c
-        ),
-      };
+  // Intelligent room-aware sorting + search filtering
+  const sortedRoster = useMemo(() => {
+    let list = [...baseRoster];
+
+    // Search filter
+    if (search.trim()) {
+      const q = search.toLowerCase().trim();
+      list = list.filter(
+        (t) =>
+          t.teamName.toLowerCase().includes(q) ||
+          t.teamId.toLowerCase().includes(q) ||
+          (t.desk && (t.desk.roomName.toLowerCase().includes(q) || String(t.desk.deskNumber).includes(q))) ||
+          (t.projectName && t.projectName.toLowerCase().includes(q))
+      );
+    }
+
+    // Tab filter
+    if (activeFilter === "pending") {
+      list = list.filter((t) => !evaluatedIds.has(t.teamId));
+    } else if (activeFilter === "evaluated") {
+      list = list.filter((t) => evaluatedIds.has(t.teamId));
+    }
+
+    // Room-aware sorting: Prioritize pending teams in active room
+    list.sort((a, b) => {
+      const aEval = evaluatedIds.has(a.teamId) ? 1 : 0;
+      const bEval = evaluatedIds.has(b.teamId) ? 1 : 0;
+
+      // Un-evaluated first
+      if (aEval !== bEval) return aEval - bEval;
+
+      // Smart Sorting: Active physical room takes precedence
+      if (activeRoomContext) {
+        const aInRoom = a.desk?.roomName === activeRoomContext ? 1 : 0;
+        const bInRoom = b.desk?.roomName === activeRoomContext ? 1 : 0;
+        if (aInRoom !== bInRoom) return bInRoom - aInRoom;
+      }
+
+      // Check-in status
+      if (a.isCheckedIn !== b.isCheckedIn) {
+        return a.isCheckedIn ? -1 : 1;
+      }
+
+      // Desk order
+      const aDesk = a.desk?.deskNumber ?? 9999;
+      const bDesk = b.desk?.deskNumber ?? 9999;
+      return aDesk - bDesk;
     });
-  }
 
-  // Submit evaluation
+    return list;
+  }, [baseRoster, search, activeFilter, evaluatedIds, activeRoomContext]);
+
+  // Calculate weighted total score
+  const totalScore = useMemo(() => {
+    if (!evalSheet) return 0;
+    return evalSheet.criteria.reduce((sum, c) => {
+      const w = Number(c.weight) || 1;
+      return sum + c.score * w;
+    }, 0);
+  }, [evalSheet]);
+
+  const maxTotalScore = useMemo(() => {
+    if (!evalSheet) return 0;
+    return evalSheet.criteria.reduce((sum, c) => {
+      const w = Number(c.weight) || 1;
+      return sum + c.maxPoints * w;
+    }, 0);
+  }, [evalSheet]);
+
+  // Submit evaluation with idempotency and undo mechanism
   async function submitEvaluation() {
-    if (!evalSheet || !selectedRound) return;
+    if (!evalSheet || !selectedRound || submitting) return;
+
     setSubmitting(true);
-    const idempotencyKey = `${evalSheet.teamId}-${selectedRound.id}-${Date.now()}`;
+    const idempotencyKey = `judge_${evalSheet.teamId}_${selectedRound.id}_${Date.now()}`;
+
+    const payload = {
+      roundId: selectedRound.id,
+      teamId: evalSheet.teamId,
+      scores: evalSheet.criteria.map((c) => ({
+        criteriaId: c.id,
+        score: c.score,
+      })),
+      generalComment: evalSheet.generalComment,
+      idempotencyKey,
+    };
 
     try {
       const res = await fetch(`/api/events/${event.slug}/judgments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          teamId: evalSheet.teamId,
-          roundId: selectedRound.id,
-          scores: evalSheet.criteria.map((c) => ({ criteriaId: c.id, score: c.score })),
-          idempotencyKey,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (res.ok) {
-        setLastSubmitMeta({ teamId: evalSheet.teamId, roundId: selectedRound.id, canUndo: true });
-        setEvalSheet(null);
-        setScanResult(null);
-        toast.success("Scores submitted successfully!");
-        await refreshProgress();
+        toast.success(`Evaluation recorded for ${evalSheet.teamName}!`);
+        setEvaluatedIds((prev) => new Set([...Array.from(prev), evalSheet.teamId]));
+        refreshProgress();
 
-        // Undo window: 10 seconds
-        if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
-        undoTimerRef.current = setTimeout(() => {
-          setLastSubmitMeta((prev) => prev ? { ...prev, canUndo: false } : null);
+        // 10-second safety undo window
+        const timer = setTimeout(() => {
+          setUndoMeta(null);
         }, 10000);
+
+        setUndoMeta({
+          teamId: evalSheet.teamId,
+          teamName: evalSheet.teamName,
+          roundId: selectedRound.id,
+          scoresPayload: payload,
+          timer,
+          secondsLeft: 10,
+        });
+
+        setEvalSheet(null);
       } else {
         const json = await res.json();
-        toast.error(json.error || "Submission failed");
+        toast.error(json.error || "Failed to submit evaluation");
       }
+    } catch {
+      toast.error("Network error submitting evaluation");
     } finally {
       setSubmitting(false);
     }
   }
 
-  // Undo judgment
+  // Undo submission
   async function handleUndo() {
-    if (!lastSubmitMeta || !lastSubmitMeta.canUndo) return;
-    const res = await fetch(`/api/events/${event.slug}/judgments`, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ teamId: lastSubmitMeta.teamId, roundId: lastSubmitMeta.roundId }),
-    });
-    if (res.ok) {
-      toast.info("Evaluation undone. You may rescore this team.");
-      setLastSubmitMeta(null);
-      await refreshProgress();
-    } else {
-      toast.error("Failed to undo evaluation.");
+    if (!undoMeta) return;
+    if (undoMeta.timer) clearTimeout(undoMeta.timer);
+
+    try {
+      const res = await fetch(`/api/events/${event.slug}/judgments/undo`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          teamId: undoMeta.teamId,
+          roundId: undoMeta.roundId,
+        }),
+      });
+
+      if (res.ok) {
+        toast.info(`Evaluation undone for ${undoMeta.teamName}`);
+        setEvaluatedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(undoMeta.teamId);
+          return next;
+        });
+        refreshProgress();
+      }
+    } catch {
+      toast.error("Failed to undo evaluation");
+    } finally {
+      setUndoMeta(null);
     }
   }
 
-  const totalTeams = assignedTeamIds !== null ? assignedTeamIds.length : (progress.total || visibleRoster.length);
-  const evalCount = assignedTeamIds !== null
-    ? visibleRoster.filter((t) => evaluatedIds.has(t.teamId)).length
-    : progress.evaluated;
-  const remCount = Math.max(0, totalTeams - evalCount);
-  const progressRate = totalTeams > 0 ? Math.round((evalCount / totalTeams) * 100) : 0;
-
-  const judgingRound = selectedRound?.status === "JUDGING";
+  const pendingCount = baseRoster.length - evaluatedIds.size;
 
   return (
     <div className={styles.container}>
-      {/* Header */}
-      <div className={styles.header}>
+      {/* 1. APP HEADER */}
+      <header className={styles.header}>
         <div>
-          <h1 className={styles.title}>Judge Dashboard</h1>
-          <p className={styles.subtitle}>{event.title}</p>
-          {assignedTeamIds !== null && (
-            <div className={styles.assignmentBadge}>
-              🎯 Assigned to you: {assignedTeamIds.length} of {roster.length} teams
+          <div className={styles.badgeRow}>
+            <span className={styles.judgeBadge}>EVALUATION WORKSPACE</span>
+            {activeRoomContext && (
+              <span className={styles.roomContextBadge}>
+                📍 Current Focus: {activeRoomContext}
+              </span>
+            )}
+          </div>
+          <h1 className={styles.title}>{event.title}</h1>
+        </div>
+
+        {rounds.length > 0 && (
+          <div className={styles.roundSelector}>
+            <label>Round:</label>
+            <select
+              value={selectedRound?.id || ""}
+              onChange={(e) => {
+                const found = rounds.find((r) => r.id === e.target.value);
+                if (found) setSelectedRound(found);
+              }}
+              className={styles.roundSelect}
+            >
+              {rounds.map((r) => (
+                <option key={r.id} value={r.id}>
+                  Round {r.roundNumber}: {r.title || "Evaluation"}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+      </header>
+
+      {/* 2. STATS KPI BAR */}
+      <div className={styles.statsGrid}>
+        <div className={styles.statCard}>
+          <span className={styles.statLabel}>Assigned Teams</span>
+          <span className={styles.statValue}>{baseRoster.length}</span>
+        </div>
+        <div className={styles.statCard}>
+          <span className={styles.statLabel}>Evaluated</span>
+          <span className={styles.statValue} style={{ color: "#34d399" }}>
+            {evaluatedIds.size}
+          </span>
+        </div>
+        <div className={styles.statCard}>
+          <span className={styles.statLabel}>Remaining</span>
+          <span className={styles.statValue} style={{ color: "#fbbf24" }}>
+            {Math.max(0, pendingCount)}
+          </span>
+        </div>
+      </div>
+
+      {/* 3. ROSTER FILTER TABS & SEARCH */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        <div className={styles.rosterTabs}>
+          <button
+            type="button"
+            className={`${styles.rosterTab} ${activeFilter === "pending" ? styles.rosterTabActive : ""}`}
+            onClick={() => setActiveFilter("pending")}
+          >
+            ⏳ Pending ({Math.max(0, pendingCount)})
+          </button>
+          <button
+            type="button"
+            className={`${styles.rosterTab} ${activeFilter === "all" ? styles.rosterTabActive : ""}`}
+            onClick={() => setActiveFilter("all")}
+          >
+            📋 All Teams ({baseRoster.length})
+          </button>
+          <button
+            type="button"
+            className={`${styles.rosterTab} ${activeFilter === "evaluated" ? styles.rosterTabActive : ""}`}
+            onClick={() => setActiveFilter("evaluated")}
+          >
+            ✅ Evaluated ({evaluatedIds.size})
+          </button>
+          <button
+            type="button"
+            className={`${styles.rosterTab} ${activeFilter === "scan" ? styles.rosterTabActive : ""}`}
+            onClick={() => setActiveFilter("scan")}
+          >
+            📷 Quick Camera Scan
+          </button>
+        </div>
+
+        {activeFilter !== "scan" && (
+          <input
+            type="text"
+            placeholder="Search teams by name, ID, room, or project..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className={styles.roundSelect}
+            style={{ width: "100%", padding: "10px 14px", borderRadius: "var(--rounded-md)" }}
+          />
+        )}
+      </div>
+
+      {/* 4. CAMERA SCANNER TAB */}
+      {activeFilter === "scan" && !evalSheet && (
+        <div className={styles.scannerCard}>
+          <div id="judge-qr-reader" className={styles.scannerViewport} />
+          <p className={styles.scannerHint}>
+            Point camera at the participant&apos;s Universal QR badge to immediately open their scoring sheet.
+          </p>
+        </div>
+      )}
+
+      {/* 5. TEAM ROSTER CARDS */}
+      {activeFilter !== "scan" && !evalSheet && (
+        <div className={styles.rosterList}>
+          {sortedRoster.map((team) => {
+            const isEvaluated = evaluatedIds.has(team.teamId);
+            const inActiveRoom =
+              activeRoomContext && team.desk?.roomName === activeRoomContext;
+
+            return (
+              <div
+                key={team.teamId}
+                className={`${styles.teamCard} ${isEvaluated ? styles.teamCardDone : ""} ${
+                  inActiveRoom && !isEvaluated ? styles.teamCardActiveRoom : ""
+                }`}
+              >
+                <div className={styles.teamHeader}>
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                      <h3 className={styles.teamName}>{team.teamName}</h3>
+                      {inActiveRoom && !isEvaluated && (
+                        <span className={styles.smartRoomPill}>
+                          📍 In {activeRoomContext}
+                        </span>
+                      )}
+                    </div>
+                    <div className={styles.teamMeta}>
+                      <span>{team.memberCount} Members</span>
+                      {team.college && <span>· {team.college}</span>}
+                      {team.desk && (
+                        <span className={styles.deskTag}>
+                          📍 {team.desk.roomName} (Desk #{team.desk.deskNumber})
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <span
+                    className={`${styles.evalStatus} ${
+                      isEvaluated ? styles.evalDone : styles.evalPending
+                    }`}
+                  >
+                    {isEvaluated ? "✓ Evaluated" : "Pending"}
+                  </span>
+                </div>
+
+                {/* Project Teaser if available */}
+                {(team.projectName || team.githubUrl) && (
+                  <div style={{ fontSize: "12px", color: "var(--color-ink-muted)", margin: "4px 0" }}>
+                    {team.projectName && <strong>Project: {team.projectName}</strong>}
+                    {team.githubUrl && <span style={{ marginLeft: "8px", color: "#3b82f6" }}>🐙 GitHub Repo</span>}
+                  </div>
+                )}
+
+                <div className={styles.teamFooter}>
+                  <button
+                    type="button"
+                    onClick={() => openEvaluationSheet(team)}
+                    className={styles.evalBtn}
+                  >
+                    {isEvaluated ? "Review / Re-score →" : "Evaluate Team ⚖️"}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+
+          {sortedRoster.length === 0 && (
+            <div className={styles.emptyCard}>
+              <div style={{ fontSize: "2rem", marginBottom: "8px" }}>⚖️</div>
+              <h4>No Teams Match Filter</h4>
+              <p>Try clearing your search or switching filter tabs above.</p>
             </div>
           )}
         </div>
-
-        {/* Round selector */}
-        <select
-          className={styles.roundSelect}
-          value={selectedRound?.id || ""}
-          onChange={(e) => {
-            const r = rounds.find((r) => r.id === e.target.value);
-            setSelectedRound(r || null);
-          }}
-        >
-          {rounds.map((r) => (
-            <option key={r.id} value={r.id}>
-              Round {r.roundNumber}: {r.title || `Round ${r.roundNumber}`} — {r.status.replace(/_/g, " ")}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Progress Bar */}
-      <div className={styles.statsCard}>
-        <div className={styles.statsRow}>
-          <div className={styles.statItem}>
-            <span className={styles.statVal}>{totalTeams}</span>
-            <span className={styles.statLabel}>{assignedTeamIds !== null ? "Assigned Teams" : "Teams"}</span>
-          </div>
-          <div className={styles.statItem}>
-            <span className={`${styles.statVal} ${styles.valGreen}`}>{evalCount}</span>
-            <span className={styles.statLabel}>Evaluated</span>
-          </div>
-          <div className={styles.statItem}>
-            <span className={`${styles.statVal} ${styles.valYellow}`}>{remCount}</span>
-            <span className={styles.statLabel}>Remaining</span>
-          </div>
-          <div className={styles.statItem}>
-            <span className={styles.statVal}>{progressRate}%</span>
-            <span className={styles.statLabel}>Progress</span>
-          </div>
-        </div>
-        <div className={styles.progressBar}>
-          <div className={styles.progressFill} style={{ width: `${progressRate}%` }} />
-        </div>
-      </div>
-
-      {!judgingRound && (
-        <div className={styles.warningBanner}>
-          ⚠ Selected round is not in JUDGING phase. Evaluation is not active.
-        </div>
       )}
 
-      {/* Undo Banner */}
-      {lastSubmitMeta?.canUndo && (
-        <div className={styles.undoBanner}>
-          <span>Judgment submitted successfully!</span>
-          <button onClick={handleUndo} className={styles.undoBtn}>↩ Undo (10s)</button>
-        </div>
-      )}
-
-      {/* Evaluation Sheet Modal */}
+      {/* 6. EVALUATION WORKSPACE MODAL / DRAWER */}
       {evalSheet && (
-        <div className={styles.evalOverlay}>
-          <div className={styles.evalModal}>
-            <div className={styles.evalHeader}>
-              <h2 className={styles.evalTitle}>Evaluating: {evalSheet.teamName}</h2>
-              <button onClick={() => setEvalSheet(null)} className={styles.evalClose}>✕</button>
+        <div className={styles.evalDrawer}>
+          <div className={styles.evalHeader}>
+            <div>
+              <span className={styles.evalHeaderBadge}>
+                {selectedRound?.title || `Round ${selectedRound?.roundNumber}`} Scoring
+              </span>
+              <h2 className={styles.evalTeamTitle}>{evalSheet.teamName}</h2>
+              {evalSheet.deskInfo && (
+                <div className={styles.evalDeskInfo}>📍 {evalSheet.deskInfo}</div>
+              )}
             </div>
 
-            <div className={styles.criteriaList}>
-              {evalSheet.criteria.map((c) => (
-                <div key={c.id} className={styles.criterionRow}>
-                  <div className={styles.criterionInfo}>
-                    <span className={styles.criterionName}>{c.name}</span>
-                    <span className={styles.criterionMax}>/ {c.maxPoints}</span>
+            <button
+              type="button"
+              onClick={() => setEvalSheet(null)}
+              className={styles.closeBtn}
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Project Details Panel */}
+          {evalSheet.project && (
+            <div className={styles.projectInfoBox}>
+              {evalSheet.project.title && (
+                <h4 className={styles.projectTitle}>
+                  💡 {evalSheet.project.title}
+                </h4>
+              )}
+              {evalSheet.project.description && (
+                <p className={styles.projectDesc}>
+                  {evalSheet.project.description}
+                </p>
+              )}
+
+              <div className={styles.projectLinksRow}>
+                {evalSheet.project.githubUrl && (
+                  <a
+                    href={evalSheet.project.githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.projectLinkChip}
+                  >
+                    🐙 GitHub Repository ↗
+                  </a>
+                )}
+                {evalSheet.project.demoUrl && (
+                  <a
+                    href={evalSheet.project.demoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.projectLinkChip}
+                  >
+                    🌐 Live Demo / Video ↗
+                  </a>
+                )}
+                {evalSheet.project.pptUrl && (
+                  <a
+                    href={evalSheet.project.pptUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.projectLinkChip}
+                  >
+                    📊 Presentation Slides ↗
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Criteria Scoring Form */}
+          <div className={styles.criteriaList}>
+            {evalSheet.criteria.map((c, idx) => {
+              const isBinary = c.maxPoints === 1;
+              const isSmall = c.maxPoints <= 5 && !isBinary;
+
+              return (
+                <div key={c.id} className={styles.criteriaCard}>
+                  <div className={styles.criteriaHeader}>
+                    <div>
+                      <h4 className={styles.criteriaName}>{c.name}</h4>
+                      {c.description && (
+                        <p className={styles.criteriaDesc}>{c.description}</p>
+                      )}
+                    </div>
+                    <span className={styles.criteriaScoreDisplay}>
+                      <strong>{c.score}</strong> / {c.maxPoints} pts
+                    </span>
                   </div>
 
-                  {c.maxPoints <= 5 ? (
-                    // Quick-tap buttons
-                    <div className={styles.quickTap}>
+                  {/* Input Type 1: Binary Yes/No */}
+                  {isBinary && (
+                    <div className={styles.quickScoreRow}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next = [...evalSheet.criteria];
+                          next[idx].score = 0;
+                          setEvalSheet({ ...evalSheet, criteria: next });
+                        }}
+                        className={`${styles.scoreBtn} ${c.score === 0 ? styles.scoreBtnActive : ""}`}
+                      >
+                        No (0)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next = [...evalSheet.criteria];
+                          next[idx].score = 1;
+                          setEvalSheet({ ...evalSheet, criteria: next });
+                        }}
+                        className={`${styles.scoreBtn} ${c.score === 1 ? styles.scoreBtnActive : ""}`}
+                      >
+                        Yes (1)
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Input Type 2: Quick-tap buttons (<= 5 points) */}
+                  {isSmall && (
+                    <div className={styles.quickScoreRow}>
                       {Array.from({ length: c.maxPoints + 1 }, (_, i) => (
                         <button
                           key={i}
-                          onClick={() => setScore(c.id, i)}
-                          className={`${styles.tapBtn} ${c.score === i ? styles.tapBtnActive : ""}`}
+                          type="button"
+                          onClick={() => {
+                            const next = [...evalSheet.criteria];
+                            next[idx].score = i;
+                            setEvalSheet({ ...evalSheet, criteria: next });
+                          }}
+                          className={`${styles.scoreBtn} ${c.score === i ? styles.scoreBtnActive : ""}`}
                         >
                           {i}
                         </button>
                       ))}
                     </div>
-                  ) : (
-                    // Stepper
-                    <div className={styles.stepper}>
+                  )}
+
+                  {/* Input Type 3: Stepper + Slider (> 5 points) */}
+                  {!isBinary && !isSmall && (
+                    <div className={styles.stepperWrapper}>
                       <button
-                        onClick={() => setScore(c.id, Math.max(0, c.score - 1))}
-                        className={styles.stepBtn}
-                      >−</button>
-                      <span className={styles.stepVal}>{c.score}</span>
+                        type="button"
+                        disabled={c.score <= 0}
+                        onClick={() => {
+                          const next = [...evalSheet.criteria];
+                          next[idx].score = Math.max(0, c.score - 1);
+                          setEvalSheet({ ...evalSheet, criteria: next });
+                        }}
+                        className={styles.stepperBtn}
+                      >
+                        -
+                      </button>
+
+                      <input
+                        type="range"
+                        min="0"
+                        max={c.maxPoints}
+                        value={c.score}
+                        onChange={(e) => {
+                          const next = [...evalSheet.criteria];
+                          next[idx].score = Number(e.target.value);
+                          setEvalSheet({ ...evalSheet, criteria: next });
+                        }}
+                        className={styles.slider}
+                        style={{ flex: 1 }}
+                      />
+
                       <button
-                        onClick={() => setScore(c.id, Math.min(c.maxPoints, c.score + 1))}
-                        className={styles.stepBtn}
-                      >+</button>
+                        type="button"
+                        disabled={c.score >= c.maxPoints}
+                        onClick={() => {
+                          const next = [...evalSheet.criteria];
+                          next[idx].score = Math.min(c.maxPoints, c.score + 1);
+                          setEvalSheet({ ...evalSheet, criteria: next });
+                        }}
+                        className={styles.stepperBtn}
+                      >
+                        +
+                      </button>
+
+                      <span className={styles.stepperValue}>{c.score}</span>
                     </div>
                   )}
                 </div>
-              ))}
-            </div>
+              );
+            })}
 
-            <button
-              onClick={submitEvaluation}
-              disabled={submitting || !judgingRound}
-              className={styles.submitBtn}
-            >
-              {submitting ? "Submitting..." : "Submit Evaluation"}
-            </button>
+            {/* General Feedback Comments */}
+            <div className={styles.commentCard}>
+              <label>Judge Remarks & Feedback (Optional):</label>
+              <textarea
+                rows={3}
+                value={evalSheet.generalComment}
+                onChange={(e) =>
+                  setEvalSheet({ ...evalSheet, generalComment: e.target.value })
+                }
+                placeholder="Key strengths, architectural critique, areas to improve..."
+                className={styles.commentInput}
+              />
+            </div>
           </div>
-        </div>
-      )}
 
-      {/* Tabs */}
-      <div className={styles.tabRow}>
-        <button
-          className={`${styles.tabBtn} ${activeTab === "scan" ? styles.tabActive : ""}`}
-          onClick={() => setActiveTab("scan")}
-        >📷 Scan Team QR</button>
-        <button
-          className={`${styles.tabBtn} ${activeTab === "roster" ? styles.tabActive : ""}`}
-          onClick={() => { setActiveTab("roster"); setScanning(false); }}
-        >📋 Team Roster ({visibleRoster.length})</button>
-      </div>
-
-      {/* Scanner Tab */}
-      {activeTab === "scan" && (
-        <div className={styles.scanWrapper}>
-          <div className={styles.scanCard}>
-            <div className={styles.scanControls}>
-              {!scanning ? (
-                <button onClick={() => { setScanResult(null); setScanning(true); }} className={styles.startBtn}>
-                  Start Camera Scanner
-                </button>
-              ) : (
-                <button onClick={() => setScanning(false)} className={styles.stopBtn}>Stop Camera</button>
-              )}
-            </div>
-
-            <div id="judge-qr-reader" className={styles.cameraBox}>
-              {!scanning && (
-                <div className={styles.cameraPlaceholder}>
-                  <span style={{ fontSize: 48 }}>📷</span>
-                  <p>Scan a participant QR pass to open evaluation sheet</p>
-                </div>
-              )}
-            </div>
-
-            {scanResult && (
-              <div className={`${styles.feedback} ${
-                scanResult.status === "success" ? styles.feedbackSuccess
-                  : scanResult.status === "warning" ? styles.feedbackWarning
-                  : styles.feedbackError
-              }`}>
-                <strong>{scanResult.status === "success" ? "✅" : scanResult.status === "warning" ? "⚠️" : "❌"}</strong>
-                <span>{scanResult.message}{scanResult.teamName ? ` — ${scanResult.teamName}` : ""}</span>
+          {/* Sticky Submit Bar */}
+          <div className={styles.stickySubmitBar}>
+            <div>
+              <div style={{ fontSize: "11px", color: "var(--color-ink-muted)", fontWeight: 700, textTransform: "uppercase" }}>
+                Total Weighted Score
               </div>
-            )}
+              <div style={{ fontSize: "20px", fontWeight: 800, color: "var(--color-ink)" }}>
+                {totalScore.toFixed(1)} / {maxTotalScore}
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                type="button"
+                onClick={() => setEvalSheet(null)}
+                className={styles.cancelEvalBtn}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={submitEvaluation}
+                className={styles.submitEvalBtn}
+              >
+                {submitting ? "Submitting..." : "Submit Evaluation 🚀"}
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Roster Tab */}
-      {activeTab === "roster" && (
-        <div className={styles.rosterWrapper}>
-          <input
-            type="text"
-            placeholder="Search teams..."
-            className={styles.searchInput}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <div className={styles.rosterList}>
-            {visibleRoster
-              .filter((t) => t.teamName.toLowerCase().includes(search.toLowerCase()))
-              .map((item) => {
-                const isEvaluated = evaluatedIds.has(item.teamId);
-                return (
-                  <div key={item.teamId} className={styles.rosterRow}>
-                    <div className={styles.rosterInfo}>
-                      <span className={styles.rosterName}>{item.teamName}</span>
-                      {item.desk && (
-                        <span className={styles.rosterDesk}>
-                          {item.desk.roomName} · Desk D{item.desk.deskNumber}
-                        </span>
-                      )}
-                    </div>
-                    <div className={styles.rosterActions}>
-                      {isEvaluated ? (
-                        <span className={styles.evaluatedBadge}>✓ Evaluated</span>
-                      ) : (
-                        <button
-                          onClick={() => loadCriteria(item.teamId, item.teamName)}
-                          disabled={!judgingRound}
-                          className={styles.evalBtn}
-                        >
-                          Evaluate
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-          </div>
+      {/* Safety Undo Toast Window */}
+      {undoMeta && (
+        <div className={styles.undoToast}>
+          <span>✓ Evaluation saved for {undoMeta.teamName}</span>
+          <button type="button" onClick={handleUndo} className={styles.undoBtn}>
+            Undo
+          </button>
         </div>
       )}
     </div>

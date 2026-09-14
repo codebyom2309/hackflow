@@ -61,8 +61,17 @@ export default async function ParticipantDashboardPage({ params }: Params) {
     // Graceful fallback if certificates query fails
   }
 
+  // Fetch existing help requests for this team
+  let initialHelpRequests: any[] = [];
+  try {
+    const { getParticipantHelpRequests } = await import("@/lib/services/help-request.service");
+    initialHelpRequests = await getParticipantHelpRequests(event.id, reg.team.id);
+  } catch {
+    // Graceful fallback
+  }
+
   return (
-    <main className="container" style={{ paddingTop: "var(--spacing-xl)" }}>
+    <main className="container" style={{ paddingTop: "var(--spacing-md)", paddingBottom: "var(--spacing-xxl)" }}>
       <ParticipantDashboard
         event={event}
         team={reg.team}
@@ -70,6 +79,7 @@ export default async function ParticipantDashboardPage({ params }: Params) {
         desk={reg.desk}
         qrDataUrl={qrDataUrl}
         certificates={certificates}
+        initialHelpRequests={initialHelpRequests}
       />
     </main>
   );

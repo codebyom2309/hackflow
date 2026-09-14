@@ -432,13 +432,19 @@ export default function OrganizerDashboard({ event, rounds: initialRounds }: Org
 
           <h3 className={styles.sectionTitle}>Quick Actions</h3>
           <div className={styles.quickActions}>
+            <a href={`/events/${event.slug}/manage/experience`} className={styles.actionCard}>
+              <span>🎨</span> Experience Builder
+            </a>
+            <a href={`/events/${event.slug}/manage/help-desk`} className={styles.actionCard}>
+              <span>🆘</span> Help Desk Queue
+            </a>
             <a href={`/events/${event.slug}/manage/import`} className={styles.actionCard}>
               <span>📥</span> Import Registrations
             </a>
             <a href={`/events/${event.slug}/manage/teams`} className={styles.actionCard}>
               <span>👥</span> Manage Teams
             </a>
-            <a href={`/events/${event.slug}/venue`} className={styles.actionCard}>
+            <a href={`/events/${event.slug}/manage/venue`} className={styles.actionCard}>
               <span>🏢</span> Manage Venue
             </a>
             <a href={`/events/${event.slug}/coordinator`} className={styles.actionCard}>

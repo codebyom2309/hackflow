@@ -30,6 +30,7 @@ const NAV_ITEMS: NavSection[] = [
     section: "Management",
     items: [
       { key: "overview", label: "Overview", icon: "📊", path: "" },
+      { key: "experience", label: "Experience Builder", icon: "🎨", path: "/experience" },
       { key: "import", label: "Import Data", icon: "📥", path: "/import" },
       { key: "teams", label: "Teams", icon: "👥", path: "/teams" },
     ],
@@ -39,7 +40,7 @@ const NAV_ITEMS: NavSection[] = [
     items: [
       { key: "venue", label: "Venue & Desks", icon: "🏢", path: "/venue" },
       { key: "rounds", label: "Rounds", icon: "🔄", path: "/rounds" },
-      { key: "judges", label: "Judges", icon: "⚖️", path: "/judges" },
+      { key: "judges", label: "Judges & Staff", icon: "⚖️", path: "/judges" },
     ],
   },
   {
@@ -50,8 +51,9 @@ const NAV_ITEMS: NavSection[] = [
     ],
   },
   {
-    section: "Communication",
+    section: "Communication & Support",
     items: [
+      { key: "help-desk", label: "Help Desk", icon: "🆘", path: "/help-desk" },
       { key: "announcements", label: "Announcements", icon: "📢", path: "/announcements" },
     ],
   },

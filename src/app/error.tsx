@@ -14,6 +14,8 @@ export default function GlobalError({
     console.error("[GlobalError]", error);
   }, [error]);
 
+  const isForbidden = error.message?.includes("Access denied") || error.message?.includes("FORBIDDEN") || (error as any).code === "FORBIDDEN";
+
   return (
     <div
       style={{
@@ -33,8 +35,8 @@ export default function GlobalError({
           width: 64,
           height: 64,
           borderRadius: "50%",
-          background: "rgba(239, 68, 68, 0.12)",
-          border: "1px solid rgba(239, 68, 68, 0.25)",
+          background: isForbidden ? "rgba(245, 158, 11, 0.12)" : "rgba(239, 68, 68, 0.12)",
+          border: isForbidden ? "1px solid rgba(245, 158, 11, 0.25)" : "1px solid rgba(239, 68, 68, 0.25)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -42,7 +44,7 @@ export default function GlobalError({
           marginBottom: "1rem",
         }}
       >
-        ⚠️
+        {isForbidden ? "🛡️" : "⚠️"}
       </div>
 
       <h1
@@ -54,38 +56,59 @@ export default function GlobalError({
           letterSpacing: "-0.5px",
         }}
       >
-        Something went wrong
+        {isForbidden ? "Access Restricted" : "Something went wrong"}
       </h1>
 
       <p
         style={{
           fontSize: "0.95rem",
-          color: "rgba(255, 255, 255, 0.55)",
+          color: "rgba(255, 255, 255, 0.65)",
           maxWidth: 480,
           margin: "0 0 1.75rem",
           lineHeight: 1.5,
         }}
       >
-        An unexpected error occurred while processing this request. You can attempt to reload the section or navigate back.
+        {isForbidden
+          ? "You do not have the required permissions to view this section of HackFlow. Each role has a dedicated portal."
+          : "An unexpected error occurred while processing this request. You can attempt to reload the section or navigate back."}
       </p>
 
       <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", justifyContent: "center" }}>
-        <button
-          onClick={() => reset()}
-          style={{
-            background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
-            color: "#ffffff",
-            border: "none",
-            padding: "0.65rem 1.4rem",
-            borderRadius: 8,
-            fontWeight: 600,
-            fontSize: "0.85rem",
-            cursor: "pointer",
-            boxShadow: "0 4px 14px rgba(99, 102, 241, 0.35)",
-          }}
-        >
-          🔄 Try Again
-        </button>
+        {isForbidden ? (
+          <Link
+            href="/events"
+            style={{
+              background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+              color: "#ffffff",
+              border: "none",
+              padding: "0.65rem 1.4rem",
+              borderRadius: 8,
+              fontWeight: 600,
+              fontSize: "0.85rem",
+              textDecoration: "none",
+              boxShadow: "0 4px 14px rgba(99, 102, 241, 0.35)",
+            }}
+          >
+            ← Return to Events Dashboard
+          </Link>
+        ) : (
+          <button
+            onClick={() => reset()}
+            style={{
+              background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+              color: "#ffffff",
+              border: "none",
+              padding: "0.65rem 1.4rem",
+              borderRadius: 8,
+              fontWeight: 600,
+              fontSize: "0.85rem",
+              cursor: "pointer",
+              boxShadow: "0 4px 14px rgba(99, 102, 241, 0.35)",
+            }}
+          >
+            🔄 Try Again
+          </button>
+        )}
 
         <Link
           href="/events"

@@ -5,7 +5,7 @@
   justify-content: center;
   position: relative;
   overflow: hidden;
-  padding: var(--spacing-lg);
+  padding: var(--spacing-lg) var(--spacing-md);
 }
 
 .card {
@@ -16,29 +16,45 @@
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
   border-radius: var(--rounded-xxl);
-  padding: var(--spacing-xxl) var(--spacing-xl);
+  padding: var(--spacing-xl);
   width: 100%;
-  max-width: 420px;
+  max-width: 640px;
   text-align: center;
   box-shadow: var(--glass-shadow);
 }
 
 .brand {
-  margin-bottom: var(--spacing-xxl);
+  margin-bottom: var(--spacing-lg);
+}
+
+.badgeTop {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  padding: 4px 12px;
+  border-radius: var(--rounded-pill);
+  background: rgba(99, 102, 241, 0.12);
+  color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  margin-bottom: var(--spacing-sm);
 }
 
 .logo {
-  font-size: 48px;
-  font-weight: 700;
-  letter-spacing: -2.5px;
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -2px;
   color: var(--color-ink);
-  margin-bottom: var(--spacing-xs);
+  margin-bottom: 4px;
 }
 
 .tagline {
-  font-size: 16px;
+  font-size: 14px;
   color: var(--color-ink-muted);
-  letter-spacing: -0.2px;
+  letter-spacing: -0.1px;
+  max-width: 440px;
+  margin: 0 auto;
 }
 
 .error {
@@ -47,8 +63,84 @@
   color: var(--color-error);
   padding: var(--spacing-sm) var(--spacing-md);
   border-radius: var(--rounded-md);
-  font-size: 14px;
+  font-size: 13px;
+  margin-bottom: var(--spacing-md);
+}
+
+/* Role Selector Grid */
+.roleGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-sm);
   margin-bottom: var(--spacing-lg);
+  text-align: left;
+}
+
+@media (max-width: 600px) {
+  .roleGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.roleCard {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--rounded-lg);
+  padding: var(--spacing-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  user-select: none;
+}
+
+.roleCard:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.16);
+  transform: translateY(-2px);
+}
+
+.roleCardActive {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.roleCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.roleIcon {
+  font-size: 22px;
+}
+
+.roleBadge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: var(--rounded-pill);
+}
+
+.roleTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-ink);
+  letter-spacing: -0.2px;
+}
+
+.roleDesc {
+  font-size: 11.5px;
+  color: var(--color-ink-muted);
+  line-height: 1.45;
+}
+
+.actionWrapper {
+  margin-bottom: var(--spacing-sm);
 }
 
 .googleButton {
@@ -57,21 +149,24 @@
   justify-content: center;
   gap: var(--spacing-sm);
   width: 100%;
-  padding: 12px var(--spacing-lg);
+  padding: 14px var(--spacing-lg);
   background: var(--color-inverse-canvas);
   color: var(--color-on-primary);
   border: none;
   border-radius: var(--rounded-pill);
   font-family: var(--font-body);
   font-size: 15px;
-  font-weight: 500;
-  letter-spacing: -0.15px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
   cursor: pointer;
-  transition: transform var(--transition-fast), opacity var(--transition-fast);
+  transition: transform var(--transition-fast), opacity var(--transition-fast), box-shadow var(--transition-fast);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.2);
 }
 
 .googleButton:hover {
-  opacity: 0.9;
+  opacity: 0.94;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
 }
 
 .googleButton:active {
@@ -84,33 +179,40 @@
   flex-shrink: 0;
 }
 
-.terms {
-  margin-top: var(--spacing-lg);
-  font-size: 12px;
+.roleDisclaimer {
+  font-size: 11.5px;
   color: var(--color-ink-muted);
+  margin-top: var(--spacing-sm);
+  line-height: 1.4;
+}
+
+.terms {
+  margin-top: var(--spacing-sm);
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
   line-height: 1.4;
 }
 
 /* Decorative gradient orbs */
 .orbViolet {
   position: absolute;
-  width: 400px;
-  height: 400px;
+  width: 450px;
+  height: 450px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(124, 58, 237, 0.15) 0%, transparent 70%);
-  top: -100px;
-  right: -100px;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.18) 0%, transparent 70%);
+  top: -120px;
+  right: -120px;
   pointer-events: none;
 }
 
 .orbMagenta {
   position: absolute;
-  width: 350px;
-  height: 350px;
+  width: 400px;
+  height: 400px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(236, 72, 153, 0.12) 0%, transparent 70%);
-  bottom: -80px;
-  left: -80px;
+  background: radial-gradient(circle, rgba(236, 72, 153, 0.14) 0%, transparent 70%);
+  bottom: -100px;
+  left: -100px;
   pointer-events: none;
 }
 
@@ -125,4 +227,13 @@
 [data-theme="day"] .googleButton:hover {
   box-shadow: var(--shadow-md);
   opacity: 1;
+}
+
+[data-theme="day"] .roleCard {
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+[data-theme="day"] .roleCard:hover {
+  background: rgba(0, 0, 0, 0.04);
 }

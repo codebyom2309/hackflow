@@ -28,6 +28,22 @@ export default function CertificateCanvasModal({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [customTemplate, setCustomTemplate] = useState<any>(null);
+
+  const slug = eventSlug || certificate.eventSlug;
+
+  // Load custom template if any
+  useEffect(() => {
+    if (!slug) return;
+    fetch(`/api/events/${slug}/certificates/template`)
+      .then((res) => res.ok ? res.json() : null)
+      .then((json) => {
+        if (json?.data) {
+          setCustomTemplate(json.data);
+        }
+      })
+      .catch(() => {});
+  }, [slug]);
 
   const certTypeConfig: Record<
     string,
@@ -96,6 +112,107 @@ export default function CertificateCanvasModal({
     const height = 1400;
     canvas.width = width;
     canvas.height = height;
+
+    // IF CUSTOM TEMPLATE EXISTS (e.g. uploaded background or custom elements)
+    if (customTemplate && Array.isArray(customTemplate.elements)) {
+      const renderWithCustom = (bgImg?: HTMLImageElement | null) => {
+        if (bgImg) {
+          ctx.drawImage(bgImg, 0, 0, width, height);
+        } else {
+          // Dark Luxury fallback
+          const grad = ctx.createLinearGradient(0, 0, width, height);
+          grad.addColorStop(0, "#090d1a");
+          grad.addColorStop(1, "#060912");
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, 0, width, height);
+
+          ctx.strokeStyle = "#bf953f";
+          ctx.lineWidth = 4;
+          ctx.strokeRect(50, 50, width - 100, height - 100);
+        }
+
+        const dateStr = certificate.generatedAt
+          ? new Date(certificate.generatedAt).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })
+          : new Date().toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            });
+
+        const variableMap: Record<string, string> = {
+          participant_name: certificate.recipientName,
+          team_name: certificate.teamName || "",
+          certificate_type: config.title,
+          event_name: certificate.eventName,
+          issue_date: dateStr,
+          verification_code: certificate.verificationCode,
+          custom_text: config.subtitle,
+        };
+
+        customTemplate.elements.forEach((el: any) => {
+          if (!el.enabled) return;
+          const posX = (el.xPercent / 100) * width;
+          const posY = (el.yPercent / 100) * height;
+
+          ctx.save();
+          ctx.textAlign = el.align || "center";
+          ctx.textBaseline = "middle";
+
+          if (el.variable === "qr_code") {
+            const size = el.fontSize || 90;
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(posX - size / 2, posY - size / 2, size, size);
+            ctx.fillStyle = "#000000";
+            ctx.fillRect(posX - size / 2 + 8, posY - size / 2 + 8, 24, 24);
+            ctx.fillRect(posX + size / 2 - 32, posY - size / 2 + 8, 24, 24);
+            ctx.fillRect(posX - size / 2 + 8, posY + size / 2 - 32, 24, 24);
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(posX - size / 2 + 14, posY - size / 2 + 14, 12, 12);
+            ctx.fillRect(posX + size / 2 - 26, posY - size / 2 + 14, 12, 12);
+            ctx.fillRect(posX - size / 2 + 14, posY + size / 2 - 26, 12, 12);
+            ctx.restore();
+            return;
+          }
+
+          let val = variableMap[el.variable] || el.customText || "";
+          if (el.textTransform === "uppercase") val = val.toUpperCase();
+          else if (el.textTransform === "capitalize") val = val.replace(/\b\w/g, (c: string) => c.toUpperCase());
+
+          if (el.opacity !== undefined) ctx.globalAlpha = el.opacity;
+          if (el.textShadow) {
+            ctx.shadowColor = "rgba(0, 0, 0, 0.75)";
+            ctx.shadowBlur = 8;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 3;
+          }
+
+          if (el.letterSpacing && (ctx as any).letterSpacing !== undefined) {
+            (ctx as any).letterSpacing = `${el.letterSpacing}px`;
+          }
+
+          ctx.font = `${el.fontWeight || "bold"} ${el.fontSize || 36}px '${el.fontFamily || "Inter"}', serif, sans-serif`;
+          ctx.fillStyle = el.color || "#ffffff";
+          ctx.fillText(val, posX, posY);
+          ctx.restore();
+        });
+      };
+
+      if (customTemplate.backgroundImageUrl) {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => renderWithCustom(img);
+        img.onerror = () => renderWithCustom(null);
+        img.src = customTemplate.backgroundImageUrl;
+        return;
+      } else {
+        renderWithCustom(null);
+        return;
+      }
+    }
 
     // 1. Background Gradient
     const bgGrad = ctx.createLinearGradient(0, 0, width, height);
@@ -374,7 +491,7 @@ export default function CertificateCanvasModal({
     ctx.fillText("Lead Adjudicator", width - 400, 1130);
 
     ctx.restore();
-  }, [certificate, config]);
+  }, [certificate, config, customTemplate]);
 
   // Download high-resolution PNG
   async function handleDownload() {

@@ -183,6 +183,14 @@ export async function getAttendanceRoster(eventId: string) {
         checkedInAt: activeRecord?.checkedInAt || null,
         checkInMethod: activeRecord?.checkInMethod || null,
         desk: deskInfo,
+        projectName: t.projectName || null,
+        projectDescription: t.projectDescription || null,
+        githubUrl: t.githubUrl || null,
+        demoUrl: t.demoUrl || null,
+        pptUrl: t.pptUrl || null,
+        problemStatement: t.problemStatement || null,
+        college: t.college || null,
+        theme: t.theme || null,
       };
     })
   );

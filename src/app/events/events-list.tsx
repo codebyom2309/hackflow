@@ -6,6 +6,8 @@ import Link from "next/link";
 import styles from "./events.module.css";
 import type { UserEventsData } from "@/lib/services/event.service";
 
+import { useSearchParams } from "next/navigation";
+
 interface EventsListProps {
   hubData: UserEventsData;
   userEmail?: string | null;
@@ -22,10 +24,21 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
 
 export default function EventsList({ hubData, userEmail }: EventsListProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const roleParam = searchParams.get("role")?.toUpperCase();
+  const tabParam = searchParams.get("tab");
 
-  // Initial tab preference: participating if any, else organizing, else staff, else explore
-  const initialTab =
-    hubData.participating.length > 0
+  // Initial tab preference: query param if given, else participating if any, else organizing, else staff, else explore
+  const defaultTab =
+    roleParam === "ORGANIZER"
+      ? "organizing"
+      : roleParam === "JUDGE" || roleParam === "COORDINATOR"
+      ? "staff"
+      : roleParam === "PARTICIPANT"
+      ? "participating"
+      : tabParam === "explore"
+      ? "explore"
+      : hubData.participating.length > 0
       ? "participating"
       : hubData.organizing.length > 0
       ? "organizing"
@@ -33,8 +46,8 @@ export default function EventsList({ hubData, userEmail }: EventsListProps) {
       ? "staff"
       : "explore";
 
-  const [activeTab, setActiveTab] = useState<"participating" | "organizing" | "staff" | "explore">(initialTab);
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [activeTab, setActiveTab] = useState<"participating" | "organizing" | "staff" | "explore">(defaultTab);
+  const [showCreateModal, setShowCreateModal] = useState(searchParams.get("prompt") === "create");
   const [newTitle, setNewTitle] = useState("");
   const [creating, setCreating] = useState(false);
 
@@ -70,19 +83,21 @@ export default function EventsList({ hubData, userEmail }: EventsListProps) {
           <p className={styles.subtitle}>
             {userEmail ? (
               <>
-                Signed in as <span className={styles.userEmailHighlight}>{userEmail}</span>. Manage your teams, passes, and events.
+                Signed in as <span className={styles.userEmailHighlight}>{userEmail}</span>. Switch between your participating teams, staff assignments, and organized events.
               </>
             ) : (
               "Manage your hackathon teams, passes, and events."
             )}
           </p>
         </div>
-        <button
-          className={styles.createButton}
-          onClick={() => setShowCreateModal(true)}
-        >
-          + Create Hackathon
-        </button>
+        {activeTab === "organizing" && (
+          <button
+            className={styles.createButton}
+            onClick={() => setShowCreateModal(true)}
+          >
+            + Create Hackathon
+          </button>
+        )}
       </div>
 
       {/* Segmented Navigation Tabs */}
@@ -107,7 +122,7 @@ export default function EventsList({ hubData, userEmail }: EventsListProps) {
           className={`${styles.tab} ${activeTab === "staff" ? styles.tabActive : ""}`}
           onClick={() => setActiveTab("staff")}
         >
-          <span>🛡️ Staff Roles</span>
+          <span>🛡️ Judge & Staff Portals</span>
           <span className={styles.badgeCount}>{hubData.staff.length}</span>
         </button>
 
@@ -322,7 +337,7 @@ export default function EventsList({ hubData, userEmail }: EventsListProps) {
                         {event.eventStarts ? new Date(event.eventStarts).toLocaleDateString() : ""}
                       </span>
                       <span className={styles.actionLinkText}>
-                        {role === "COORDINATOR" ? "Open Scanner Terminal →" : "Open Judging Portal →"}
+                        {role === "COORDINATOR" ? "Open Staff Operations Desk →" : "Open Judge Evaluation Workspace →"}
                       </span>
                     </div>
                   </button>
