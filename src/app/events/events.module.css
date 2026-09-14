@@ -302,12 +302,44 @@
     transform var(--transition-fast);
   font-family: var(--font-body);
   width: 100%;
+  text-decoration: none;
+  color: inherit;
 }
 
 .card:hover {
   background: var(--glass-bg-hover);
   border-color: var(--color-hairline);
   transform: translateY(-2px);
+}
+
+.cardQuickLinks {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.quickLinkPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--rounded-pill);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-hairline);
+  color: var(--color-ink);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+}
+
+.quickLinkPill:hover {
+  background: rgba(0, 153, 255, 0.15);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  transform: translateY(-1px);
 }
 
 .cardHeader {

@@ -38,10 +38,38 @@ export async function addCriterion(roundId: string, input: CriteriaInput) {
  * List all criteria for a round, ordered by displayOrder.
  */
 export async function getRoundCriteria(roundId: string) {
-  return db.query.evaluationCriteria.findMany({
+  const list = await db.query.evaluationCriteria.findMany({
     where: eq(evaluationCriteria.roundId, roundId),
     orderBy: (c, { asc }) => [asc(c.displayOrder)],
   });
+
+  if (list.length === 0) {
+    // Auto-seed standard evaluation criteria with UUIDs so scoring is immediately operational
+    const defaults = [
+      { name: "Technical Complexity & Execution", description: "Architecture, engineering rigor, and implementation feasibility", maxPoints: 10, weight: "1.0", displayOrder: 1 },
+      { name: "Innovation & Originality", description: "Creativity, novelty, and fresh thinking in the domain", maxPoints: 10, weight: "1.0", displayOrder: 2 },
+      { name: "UI / UX & Design Polish", description: "Visual aesthetics, responsive layout, and intuitive flow", maxPoints: 10, weight: "1.0", displayOrder: 3 },
+      { name: "Presentation & Impact", description: "Pitch delivery, problem significance, and value proposition", maxPoints: 10, weight: "1.0", displayOrder: 4 },
+    ];
+    for (const d of defaults) {
+      await db.insert(evaluationCriteria).values({
+        id: crypto.randomUUID(),
+        roundId,
+        name: d.name,
+        description: d.description,
+        maxPoints: d.maxPoints,
+        weight: d.weight,
+        displayOrder: d.displayOrder,
+        isRequired: true,
+      });
+    }
+    return db.query.evaluationCriteria.findMany({
+      where: eq(evaluationCriteria.roundId, roundId),
+      orderBy: (c, { asc }) => [asc(c.displayOrder)],
+    });
+  }
+
+  return list;
 }
 
 /**

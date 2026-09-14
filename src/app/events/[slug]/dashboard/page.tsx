@@ -71,7 +71,7 @@ export default async function ParticipantDashboardPage({ params }: Params) {
   }
 
   return (
-    <main className="container" style={{ paddingTop: "var(--spacing-md)", paddingBottom: "var(--spacing-xxl)" }}>
+    <main style={{ width: "100%", minHeight: "100vh" }}>
       <ParticipantDashboard
         event={event}
         team={reg.team}

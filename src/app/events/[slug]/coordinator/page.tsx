@@ -38,7 +38,7 @@ export default async function CoordinatorPage({ params }: Params) {
   const initialData = await getAttendanceRoster(event.id);
 
   return (
-    <main className="container" style={{ paddingTop: "var(--spacing-md)", paddingBottom: "var(--spacing-xxl)" }}>
+    <main style={{ width: "100%", maxWidth: "1280px", margin: "0 auto", padding: "12px 14px 80px" }}>
       <CoordinatorScanner
         event={event}
         initialRoster={initialData.roster}

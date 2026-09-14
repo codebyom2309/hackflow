@@ -388,3 +388,41 @@
     display: block;
   }
 }
+
+@media (max-width: 640px) {
+  .inner {
+    height: 52px;
+    gap: 6px;
+    padding-inline: 8px;
+  }
+  .left {
+    gap: 6px;
+  }
+  .logo {
+    font-size: 16px;
+    letter-spacing: -0.5px;
+  }
+  .osBadge {
+    display: none;
+  }
+  .roleLabel {
+    display: none;
+  }
+  .rolePill {
+    padding: 3px 8px;
+  }
+  .contextDivider {
+    display: none;
+  }
+  .right {
+    gap: 6px;
+  }
+  .signOutBtn {
+    display: none;
+  }
+  .userMenu {
+    padding: 0;
+    border: none;
+    background: transparent;
+  }
+}

@@ -140,14 +140,14 @@ export default function EventsList({ hubData, userEmail }: EventsListProps) {
         <div>
           {hubData.participating.length > 0 ? (
             <div className={styles.participatingGrid}>
-              {hubData.participating.map(({ event, team, isLeader }) => {
+              {hubData.participating.map(({ event, team, isLeader }, idx) => {
                 const statusInfo = STATUS_LABELS[event.status] || {
                   label: event.status,
                   color: "var(--color-ink-muted)",
                 };
 
                 return (
-                  <div key={team.id} className={styles.participatingCard}>
+                  <div key={`${team.id}-${event.id}-${idx}`} className={styles.participatingCard}>
                     <div className={styles.cardGlowBorder} />
 
                     <div className={styles.cardTop}>
@@ -241,14 +241,14 @@ export default function EventsList({ hubData, userEmail }: EventsListProps) {
         <div>
           {hubData.organizing.length > 0 ? (
             <div className={styles.grid}>
-              {hubData.organizing.map((event) => {
+              {hubData.organizing.map((event, idx) => {
                 const statusInfo = STATUS_LABELS[event.status] || {
                   label: event.status,
                   color: "var(--color-ink-muted)",
                 };
                 return (
-                  <button
-                    key={event.id}
+                  <div
+                    key={`${event.id}-${idx}`}
                     className={styles.card}
                     onClick={() => router.push(`/events/${event.slug}/manage`)}
                   >
@@ -274,7 +274,15 @@ export default function EventsList({ hubData, userEmail }: EventsListProps) {
                       </span>
                       <span className={styles.actionLinkText}>Manage Event →</span>
                     </div>
-                  </button>
+                    <div className={styles.cardQuickLinks} onClick={(e) => e.stopPropagation()}>
+                      <Link href={`/events/${event.slug}/judge`} className={styles.quickLinkPill}>
+                        ⚖️ Judge Workspace
+                      </Link>
+                      <Link href={`/events/${event.slug}/coordinator`} className={styles.quickLinkPill}>
+                        📋 Staff Operations Desk
+                      </Link>
+                    </div>
+                  </div>
                 );
               })}
             </div>
@@ -301,7 +309,7 @@ export default function EventsList({ hubData, userEmail }: EventsListProps) {
         <div>
           {hubData.staff.length > 0 ? (
             <div className={styles.grid}>
-              {hubData.staff.map(({ event, role }) => {
+              {hubData.staff.map(({ event, role }, idx) => {
                 const statusInfo = STATUS_LABELS[event.status] || {
                   label: event.status,
                   color: "var(--color-ink-muted)",
@@ -312,10 +320,10 @@ export default function EventsList({ hubData, userEmail }: EventsListProps) {
                     : `/events/${event.slug}/judge`;
 
                 return (
-                  <button
-                    key={event.id}
+                  <Link
+                    key={`${event.id}-${role}-${idx}`}
+                    href={targetUrl}
                     className={styles.card}
-                    onClick={() => router.push(targetUrl)}
                   >
                     <div className={styles.cardHeader}>
                       <span
@@ -340,7 +348,7 @@ export default function EventsList({ hubData, userEmail }: EventsListProps) {
                         {role === "COORDINATOR" ? "Open Staff Operations Desk →" : "Open Judge Evaluation Workspace →"}
                       </span>
                     </div>
-                  </button>
+                  </Link>
                 );
               })}
             </div>
@@ -361,17 +369,17 @@ export default function EventsList({ hubData, userEmail }: EventsListProps) {
         <div>
           {hubData.publicEvents.length > 0 ? (
             <div className={styles.grid}>
-              {hubData.publicEvents.map((event) => {
+              {hubData.publicEvents.map((event, idx) => {
                 const statusInfo = STATUS_LABELS[event.status] || {
                   label: event.status,
                   color: "var(--color-ink-muted)",
                 };
 
                 return (
-                  <button
-                    key={event.id}
+                  <Link
+                    key={`${event.id}-${idx}`}
+                    href={`/events/${event.slug}`}
                     className={styles.card}
-                    onClick={() => router.push(`/events/${event.slug}`)}
                   >
                     <div className={styles.cardHeader}>
                       <span
@@ -396,7 +404,7 @@ export default function EventsList({ hubData, userEmail }: EventsListProps) {
                       </span>
                       <span className={styles.actionLinkText}>Register / View →</span>
                     </div>
-                  </button>
+                  </Link>
                 );
               })}
             </div>

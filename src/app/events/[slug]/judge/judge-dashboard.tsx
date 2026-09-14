@@ -514,8 +514,7 @@ export default function JudgeDashboard({
             placeholder="Search teams by name, ID, room, or project..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className={styles.roundSelect}
-            style={{ width: "100%", padding: "10px 14px", borderRadius: "var(--rounded-md)" }}
+            className={styles.searchInput}
           />
         )}
       </div>
@@ -608,8 +607,9 @@ export default function JudgeDashboard({
 
       {/* 6. EVALUATION WORKSPACE MODAL / DRAWER */}
       {evalSheet && (
-        <div className={styles.evalDrawer}>
-          <div className={styles.evalHeader}>
+        <div className={styles.evalOverlay} onClick={() => setEvalSheet(null)}>
+          <div className={styles.evalDrawer} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.evalHeader}>
             <div>
               <span className={styles.evalHeaderBadge}>
                 {selectedRound?.title || `Round ${selectedRound?.roundNumber}`} Scoring
@@ -839,6 +839,7 @@ export default function JudgeDashboard({
                 {submitting ? "Submitting..." : "Submit Evaluation 🚀"}
               </button>
             </div>
+          </div>
           </div>
         </div>
       )}

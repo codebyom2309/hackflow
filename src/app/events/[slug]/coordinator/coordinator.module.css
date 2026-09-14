@@ -2,187 +2,259 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
+  width: 100%;
   max-width: 100%;
 }
 
+@media (max-width: 650px) {
+  .container {
+    padding-bottom: 80px;
+  }
+}
+
+/* =========================================
+   Header & Role Branding
+   ========================================= */
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--spacing-sm);
-  background: var(--color-surface-1);
-  border: 1px solid var(--color-hairline);
-  border-radius: var(--rounded-lg);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--rounded-xl);
   padding: var(--spacing-md) var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
 }
 
-.headerLeft {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.badgeRow {
+.brandRow {
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
+  flex-wrap: wrap;
 }
 
-.opsBadge {
+.roleBadge {
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.1em;
-  padding: 2px 7px;
+  padding: 3px 8px;
   border-radius: var(--rounded-xs);
-  background: rgba(52, 211, 153, 0.12);
-  border: 1px solid rgba(52, 211, 153, 0.3);
-  color: var(--color-success);
+  background: rgba(52, 211, 153, 0.14);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  color: #10b981;
+  text-transform: uppercase;
 }
 
 .personalBadge {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
-  color: var(--color-ink-muted);
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  padding: 2px 9px;
+  border-radius: var(--rounded-pill);
 }
 
 .title {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 800;
   color: var(--color-ink);
-  margin: 0;
-  letter-spacing: -0.4px;
+  margin: 4px 0 0;
+  letter-spacing: -0.5px;
 }
 
-.progressPill {
+/* =========================================
+   App Navigation (Top Pill Bar)
+   ========================================= */
+.appNav {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 160px;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px var(--spacing-xs);
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
 
-.progressText {
-  font-size: 11px;
-  color: var(--color-ink-muted);
-  text-align: right;
+.appNav::-webkit-scrollbar {
+  display: none;
 }
 
-.progressText strong {
-  color: var(--color-success);
-}
-
-.progressBar {
-  height: 6px;
-  background: var(--color-surface-2);
-  border-radius: var(--rounded-pill);
-  overflow: hidden;
-}
-
-.progressFill {
-  height: 100%;
-  background: var(--color-success);
-  border-radius: var(--rounded-pill);
-  transition: width var(--transition-base);
-}
-
-/* Touch Navigation */
-.touchNav {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: var(--spacing-xs);
-  background: var(--color-surface-1);
-  border: 1px solid var(--color-hairline);
-  border-radius: var(--rounded-pill);
-  padding: 4px;
-}
-
-.touchTab {
-  display: flex;
+.navBtn {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 6px;
-  padding: 10px 8px;
+  padding: 8px 16px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
   border-radius: var(--rounded-pill);
-  background: none;
-  border: none;
+  font-size: 12.5px;
+  font-weight: 600;
   color: var(--color-ink-muted);
-  font-size: 12px;
-  font-weight: 700;
   cursor: pointer;
-  position: relative;
+  white-space: nowrap;
   transition: all var(--transition-fast);
+  user-select: none;
 }
 
-.touchTabActive {
-  background: var(--color-surface-2);
+.navBtn:hover {
   color: var(--color-ink);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--color-hairline);
+  background: var(--glass-bg-hover);
+  border-color: var(--color-hairline);
 }
 
-.unreadBadge {
-  position: absolute;
-  top: 4px;
-  right: 6px;
-  background: var(--color-error);
-  color: #ffffff;
-  font-size: 9px;
+.navBtnActive {
+  background: rgba(245, 158, 11, 0.16);
+  border-color: rgba(245, 158, 11, 0.45);
+  color: #fbbf24;
+  font-weight: 700;
+}
+
+/* =========================================
+   Operations Hub: KPI Stats & Shortcuts
+   ========================================= */
+.statsBar {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-sm);
+}
+
+@media (min-width: 640px) {
+  .statsBar {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.statBox {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--rounded-lg);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: center;
+  transition: transform var(--transition-fast), border-color var(--transition-fast);
+}
+
+.statBox:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-hairline);
+}
+
+.statLabel {
+  font-size: 10px;
   font-weight: 800;
-  padding: 1px 5px;
-  border-radius: var(--rounded-pill);
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+  letter-spacing: 0.05em;
 }
 
-/* Scanner View */
-.scannerView {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-  align-items: center;
+.statValue {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--color-ink);
+  letter-spacing: -0.5px;
 }
 
-.viewfinderCard {
-  width: 100%;
-  max-width: 420px;
-  background: var(--color-surface-1);
-  border: 1px solid var(--color-hairline);
-  border-radius: var(--rounded-xxl);
+.card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--rounded-xl);
   padding: var(--spacing-md);
-  box-shadow: var(--glass-shadow);
+  transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+  text-align: left;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-hairline);
+  box-shadow: var(--shadow-md);
+}
+
+/* =========================================
+   Camera Scanner View
+   ========================================= */
+.scannerWrapper {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: var(--spacing-md);
 }
 
-.viewfinder {
+.scannerViewport {
   width: 100%;
   min-height: 280px;
-  border-radius: var(--rounded-lg);
+  max-height: 380px;
+  border-radius: var(--rounded-2xl);
   overflow: hidden;
   background: #000000;
+  position: relative;
+  border: 2px solid var(--glass-border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
-.camHelp {
-  font-size: 12px;
+.scannerViewport::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #10b981, #34d399, transparent);
+  animation: scanLine 2.2s ease-in-out infinite alternate;
+  box-shadow: 0 0 12px #34d399;
+  z-index: 5;
+  pointer-events: none;
+}
+
+@keyframes scanLine {
+  0% {
+    top: 5%;
+  }
+  100% {
+    top: 95%;
+  }
+}
+
+.scannerHint {
+  font-size: 12.5px;
   color: var(--color-ink-muted);
   text-align: center;
-  margin: var(--spacing-sm) 0 0;
+  margin-top: 4px;
+  line-height: 1.4;
 }
 
-/* High Contrast Result Popup */
-.resultModal {
+/* Scan Result High-Visibility Banner */
+.resultBanner {
   width: 100%;
-  max-width: 420px;
   border-radius: var(--rounded-xl);
-  padding: var(--spacing-lg);
+  padding: 14px 18px;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
-  animation: popIn 150ms ease-out;
+  gap: 6px;
+  animation: popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  margin-top: 8px;
+  box-shadow: var(--shadow-md);
 }
 
 @keyframes popIn {
   from {
-    transform: scale(0.95);
+    transform: scale(0.96);
     opacity: 0;
   }
   to {
@@ -193,373 +265,466 @@
 
 .resultSuccess {
   background: rgba(16, 185, 129, 0.15);
-  border: 2px solid var(--color-success);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #10b981;
 }
 
 .resultWarning {
-  background: rgba(251, 191, 36, 0.15);
-  border: 2px solid var(--color-warning);
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #f59e0b;
 }
 
 .resultError {
   background: rgba(239, 68, 68, 0.15);
-  border: 2px solid var(--color-error);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #ef4444;
 }
 
-.resultHeader {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.resultIcon {
-  font-size: 28px;
+.resultStatusText {
+  font-size: 13.5px;
   font-weight: 800;
-}
-
-.resultTitle {
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--color-ink);
-  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .resultTeamName {
   font-size: 18px;
   font-weight: 800;
   color: var(--color-ink);
-  display: block;
+  letter-spacing: -0.3px;
 }
 
-.deskAllotmentBox {
-  background: var(--color-canvas);
-  border: 1px solid var(--color-hairline);
-  padding: 12px;
-  border-radius: var(--rounded-md);
-  text-align: center;
-}
-
-.deskAllotmentLabel {
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  color: var(--color-success);
-}
-
-.deskAllotmentValue {
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--color-ink);
-  margin-top: 4px;
-}
-
-.resultDismissBtn {
-  width: 100%;
-  padding: 12px;
-  border-radius: var(--rounded-pill);
-  background: var(--color-ink);
-  color: var(--color-canvas);
-  font-size: 14px;
+.deskAllotmentPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
   font-weight: 700;
-  border: none;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 4px 12px;
+  border-radius: var(--rounded-pill);
+  align-self: flex-start;
+}
+
+.dismissBtn {
+  align-self: flex-start;
+  margin-top: 4px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--rounded-pill);
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-ink);
   cursor: pointer;
+  transition: all var(--transition-fast);
 }
 
-/* Roster View */
-.rosterView {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
+.dismissBtn:hover {
+  background: rgba(255, 255, 255, 0.15);
 }
 
-.searchBar {
-  width: 100%;
-}
-
+/* =========================================
+   Teams Roster & Manual Check-in
+   ========================================= */
 .searchInput {
   width: 100%;
-  background: var(--color-surface-1);
-  border: 1px solid var(--color-hairline);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
   border-radius: var(--rounded-pill);
-  padding: 12px 18px;
-  font-size: 14px;
+  padding: 10px 18px;
+  font-size: 13px;
   color: var(--color-ink);
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.searchInput:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(0, 153, 255, 0.15);
+}
+
+.searchInput::placeholder {
+  color: var(--color-ink-muted);
+  opacity: 0.8;
 }
 
 .rosterList {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xs);
+  gap: var(--spacing-sm);
 }
 
 .rosterCard {
-  background: var(--color-surface-1);
-  border: 1px solid var(--color-hairline);
-  border-radius: var(--rounded-md);
-  padding: 12px 14px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--rounded-xl);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-fast), border-color var(--transition-fast);
+}
+
+.rosterCard:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-hairline);
+}
+
+.rosterCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rosterTeamName {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-ink);
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+.rosterMeta {
+  font-size: 12px;
+  color: var(--color-ink-muted);
   display: flex;
   align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.rosterDeskTag {
+  font-weight: 700;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 2px 7px;
+  border-radius: var(--rounded-pill);
+}
+
+.checkInStatus {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--rounded-pill);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.statusCheckedIn {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.statusPending {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.rosterCardFooter {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding-top: 6px;
+  border-top: 1px solid var(--color-hairline-soft);
+}
+
+.manualCheckInBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 7px 16px;
+  border-radius: var(--rounded-pill);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-fast);
+}
+
+.manualCheckInBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.45);
+  opacity: 0.95;
+}
+
+.manualCheckInBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.emptyState {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px dashed var(--glass-border);
+  border-radius: var(--rounded-xl);
+  padding: 40px var(--spacing-lg);
+  text-align: center;
+  color: var(--color-ink-muted);
+}
+
+.emptyState h4 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-ink);
+  margin: 0 0 4px;
+}
+
+.emptyState p {
+  font-size: 13px;
+  margin: 0;
+}
+
+/* =========================================
+   Venue Rooms & Desks Grid
+   ========================================= */
+.roomGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.roomCard {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--rounded-xl);
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: var(--shadow-sm);
+}
+
+.roomCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.roomName {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-ink);
+  margin: 0;
+}
+
+.roomCount {
+  font-size: 12px;
+  color: var(--color-ink-muted);
+}
+
+/* =========================================
+   Help Desk Tickets Queue
+   ========================================= */
+.ticketFeed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.ticketCard {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--rounded-xl);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: var(--shadow-sm);
+}
+
+.ticketHeader {
+  display: flex;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
 }
 
-.rosterCardChecked {
-  border-color: rgba(52, 211, 153, 0.3);
-  background: linear-gradient(90deg, rgba(52, 211, 153, 0.04) 0%, var(--color-surface-1) 100%);
-}
-
-.rosterTeamName {
+.ticketCategory {
   font-size: 14px;
   font-weight: 700;
   color: var(--color-ink);
 }
 
-.rosterMeta {
-  font-size: 11px;
-  color: var(--color-ink-muted);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 2px;
-}
-
-.deskTag {
-  font-weight: 700;
-  color: var(--color-success);
-}
-
-.unallottedTag {
-  color: var(--color-warning);
-}
-
-.checkedInBadge {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--color-success);
-}
-
-.checkInBtn {
-  padding: 8px 14px;
-  font-size: 12px;
-  font-weight: 700;
-  background: var(--color-ink);
-  color: var(--color-canvas);
-  border-radius: var(--rounded-pill);
-  border: none;
-  cursor: pointer;
-}
-
-/* Help Desk View */
-.helpView {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-}
-
-.helpFilterRow {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-}
-
-.helpFilterBtn {
-  padding: 6px 12px;
-  font-size: 11px;
-  font-weight: 700;
-  background: var(--color-surface-1);
-  border: 1px solid var(--color-hairline);
-  color: var(--color-ink-muted);
-  border-radius: var(--rounded-pill);
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.helpFilterActive {
-  background: var(--color-surface-2);
-  color: var(--color-ink);
-  border-color: var(--color-accent);
-}
-
-.refreshHelpBtn {
-  margin-left: auto;
-  padding: 6px 10px;
-  font-size: 12px;
-  background: var(--color-surface-1);
-  border: 1px solid var(--color-hairline);
-  color: var(--color-ink);
-  border-radius: var(--rounded-pill);
-  cursor: pointer;
-}
-
-.helpList {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-}
-
-.emptyHelp {
-  text-align: center;
-  font-size: 13px;
-  color: var(--color-ink-muted);
-  padding: var(--spacing-xl) 0;
-}
-
-.ticketCard {
-  background: var(--color-surface-1);
-  border: 1px solid var(--color-hairline);
-  border-radius: var(--rounded-md);
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.ticketUrgent {
-  border-left: 4px solid var(--color-error);
-}
-
-.ticketHigh {
-  border-left: 4px solid var(--color-warning);
-}
-
-.ticketTop {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.ticketCat {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--color-ink);
-  text-transform: capitalize;
-}
-
 .ticketPriority {
-  font-size: 9px;
+  font-size: 10.5px;
   font-weight: 800;
-  padding: 1px 6px;
-  border-radius: var(--rounded-xs);
+  padding: 2px 8px;
+  border-radius: var(--rounded-pill);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.tpUrgent {
-  background: rgba(239, 68, 68, 0.2);
-  color: var(--color-error);
+.prioUrgent {
+  background: rgba(239, 68, 68, 0.16);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #ef4444;
 }
 
-.tpHigh {
-  background: rgba(251, 191, 36, 0.2);
-  color: var(--color-warning);
+.prioHigh {
+  background: rgba(245, 158, 11, 0.16);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #f59e0b;
 }
 
-.tpNormal {
-  background: var(--glass-bg);
-  color: var(--color-ink-muted);
+.prioNormal {
+  background: rgba(0, 153, 255, 0.14);
+  border: 1px solid rgba(0, 153, 255, 0.3);
+  color: #38bdf8;
 }
 
-.ticketLocation {
+.ticketTeam {
   font-size: 12px;
-  color: var(--color-ink);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.ticketLocation span {
-  color: var(--color-success);
+  color: var(--color-ink-muted);
   font-weight: 600;
 }
 
 .ticketDesc {
-  font-size: 12px;
-  color: var(--color-ink-muted);
-  margin: 0;
-  line-height: 1.4;
-  background: var(--color-canvas);
-  padding: 8px 10px;
-  border-radius: var(--rounded-xs);
+  font-size: 13px;
+  color: var(--color-ink);
+  line-height: 1.45;
+  margin: 2px 0;
 }
 
-.ticketNotes {
+.ticketLocation {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 2px 8px;
+  border-radius: var(--rounded-pill);
+  align-self: flex-start;
+}
+
+.ticketFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-hairline-soft);
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ticketTime {
   font-size: 11px;
-  color: var(--color-success);
-  background: rgba(52, 211, 153, 0.08);
-  padding: 6px 8px;
-  border-radius: var(--rounded-xs);
+  color: var(--color-ink-muted);
 }
 
 .ticketActions {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   gap: 6px;
-  margin-top: 4px;
 }
 
 .claimBtn {
-  padding: 6px 10px;
-  font-size: 11px;
-  font-weight: 600;
+  padding: 5px 12px;
+  font-size: 11.5px;
+  font-weight: 700;
+  border-radius: var(--rounded-pill);
   background: var(--color-surface-2);
   border: 1px solid var(--color-hairline);
   color: var(--color-ink);
-  border-radius: var(--rounded-pill);
   cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.claimBtn:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .resolveBtn {
-  padding: 6px 12px;
-  font-size: 11px;
+  padding: 5px 12px;
+  font-size: 11.5px;
   font-weight: 700;
-  background: var(--color-success);
-  color: #064e3b;
-  border: none;
   border-radius: var(--rounded-pill);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border: none;
   cursor: pointer;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+  transition: all var(--transition-fast);
+}
+
+.resolveBtn:hover {
+  opacity: 0.92;
 }
 
 .resolvedTag {
   font-size: 11px;
   font-weight: 700;
-  color: var(--color-success);
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 3px 8px;
+  border-radius: var(--rounded-pill);
 }
 
-/* Resolution Modal */
+/* =========================================
+   Resolution Notes Modal
+   ========================================= */
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(4px);
-  z-index: 100;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 999;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--spacing-md);
+  padding: 16px;
+  animation: fadeIn 0.2s ease-out;
 }
 
 .modal {
+  background: var(--color-canvas);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--rounded-xl);
+  padding: 24px;
   width: 100%;
-  max-width: 400px;
-  background: var(--color-surface-1);
-  border: 1px solid var(--color-hairline);
-  border-radius: var(--rounded-lg);
-  padding: var(--spacing-lg);
+  max-width: 500px;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
 
 .modal h3 {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 800;
   color: var(--color-ink);
   margin: 0;
 }
 
 .modalSub {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--color-ink-muted);
   margin: 0;
 }
@@ -568,97 +733,70 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  margin: 4px 0;
 }
 
 .modalField label {
   font-size: 12px;
+  font-weight: 700;
   color: var(--color-ink-muted);
-  font-weight: 600;
 }
 
 .modalTextarea {
-  background: var(--color-canvas);
+  background: var(--color-surface-2);
   border: 1px solid var(--color-hairline);
-  border-radius: var(--rounded-sm);
-  padding: 10px;
+  border-radius: var(--rounded-md);
+  padding: 10px 12px;
   color: var(--color-ink);
   font-size: 13px;
+  font-family: inherit;
   resize: vertical;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.modalTextarea:focus {
+  border-color: var(--color-accent);
 }
 
 .modalBtns {
   display: flex;
-  align-items: center;
   justify-content: flex-end;
-  gap: var(--spacing-sm);
+  gap: 8px;
+  margin-top: 6px;
 }
 
 .modalCancel {
-  padding: 8px 12px;
-  font-size: 12px;
-  background: none;
+  padding: 8px 16px;
+  border-radius: var(--rounded-pill);
+  background: transparent;
   border: 1px solid var(--color-hairline);
   color: var(--color-ink-muted);
-  border-radius: var(--rounded-pill);
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
+}
+
+.modalConfirm {
+  padding: 8px 18px;
+  border-radius: var(--rounded-pill);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
 }
 
 /* =========================================
-   Coordinator App Navigation & Mobile Bottom Bar
+   Mobile Sticky Bottom Navigation Bar
    ========================================= */
-
-.appNav {
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  padding: 2px 0 var(--spacing-sm);
-  scrollbar-width: none;
-}
-
-.appNav::-webkit-scrollbar {
-  display: none;
-}
-
-.navBtn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: var(--color-surface-1);
-  border: 1px solid var(--color-hairline);
-  border-radius: var(--rounded-pill);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-ink-muted);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all var(--transition-fast);
-}
-
-.navBtn:hover {
-  color: var(--color-ink);
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.navBtnActive {
-  background: rgba(245, 158, 11, 0.15);
-  border-color: rgba(245, 158, 11, 0.4);
-  color: #fbbf24;
-}
-
 .bottomBar {
   display: none;
 }
 
 @media (max-width: 650px) {
-  .appNav {
-    display: none;
-  }
-
-  .container {
-    padding-bottom: 80px;
-  }
-
   .bottomBar {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -666,13 +804,13 @@
     bottom: 0;
     left: 0;
     right: 0;
-    background: rgba(13, 15, 24, 0.95);
+    background: var(--color-canvas);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-top: 1px solid var(--glass-border);
-    padding: 6px 4px 10px;
-    z-index: 100;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
+    padding: 6px 4px calc(8px + env(safe-area-inset-bottom));
+    z-index: 900;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.35);
   }
 
   .bottomBarItem {
@@ -686,67 +824,25 @@
     color: var(--color-ink-muted);
     font-size: 10px;
     font-weight: 600;
-    padding: 6px 2px;
+    padding: 4px 2px;
     cursor: pointer;
     border-radius: 8px;
     user-select: none;
+    position: relative;
+    transition: color var(--transition-fast);
   }
 
   .bottomBarIcon {
     font-size: 18px;
+    transition: transform var(--transition-fast);
   }
 
   .bottomBarActive {
     color: #fbbf24;
+    font-weight: 700;
   }
 
   .bottomBarActive .bottomBarIcon {
-    transform: scale(1.1);
+    transform: scale(1.15);
   }
-}
-
-/* Venue Desk Grid */
-.roomGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: var(--spacing-md);
-}
-
-.roomCard {
-  background: var(--color-surface-1);
-  border: 1px solid var(--color-hairline);
-  border-radius: var(--rounded-lg);
-  padding: var(--spacing-md);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.roomCardHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.roomName {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--color-ink);
-  margin: 0;
-}
-
-.roomCount {
-  font-size: 12px;
-  color: var(--color-ink-muted);
-}
-
-.modalConfirm {
-  padding: 8px 14px;
-  font-size: 12px;
-  font-weight: 700;
-  background: var(--color-success);
-  color: #064e3b;
-  border: none;
-  border-radius: var(--rounded-sm);
-  cursor: pointer;
 }

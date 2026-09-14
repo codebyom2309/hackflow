@@ -21,7 +21,7 @@ export async function GET(_request: Request, { params }: Params) {
     if (!event)
       return NextResponse.json({ error: "Event not found" }, { status: 404 });
 
-    await requireRole(session.user.id, event.id, "JUDGE");
+    await requireRole(session.user.id, event.id, "JUDGE", "ORGANIZER");
 
     const progress = await getJudgeProgress(event.id, session.user.id, roundId);
     return NextResponse.json({ data: progress });

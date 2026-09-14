@@ -35,7 +35,57 @@ export default async function JudgePage({ params }: Params) {
     throw err;
   }
 
-  const rounds = await getEventRounds(event.id);
+  let rounds = await getEventRounds(event.id);
+
+  // Auto-initialize Round 1 if event has no evaluation rounds configured yet
+  if (rounds.length === 0) {
+    try {
+      const { createRound } = await import("@/lib/services/round.service");
+      const { addCriterion } = await import("@/lib/services/criteria.service");
+      const { db } = await import("@/lib/db");
+      const { rounds: roundsTable } = await import("@/lib/db/schema");
+      const { eq } = await import("drizzle-orm");
+
+      const round = await createRound(event.id, {
+        roundNumber: 1,
+        title: "Round 1: Preliminary Evaluation",
+      });
+      await db
+        .update(roundsTable)
+        .set({ status: "JUDGING" })
+        .where(eq(roundsTable.id, round.id));
+
+      await addCriterion(round.id, {
+        name: "Technical Complexity & Execution",
+        description: "Architecture, engineering rigor, and implementation feasibility",
+        maxPoints: 10,
+        weight: 1,
+      });
+      await addCriterion(round.id, {
+        name: "Innovation & Originality",
+        description: "Creativity, novelty, and fresh thinking in the domain",
+        maxPoints: 10,
+        weight: 1,
+      });
+      await addCriterion(round.id, {
+        name: "UI / UX & Design Polish",
+        description: "Visual aesthetics, responsive layout, and intuitive flow",
+        maxPoints: 10,
+        weight: 1,
+      });
+      await addCriterion(round.id, {
+        name: "Presentation & Impact",
+        description: "Pitch delivery, problem significance, and value proposition",
+        maxPoints: 10,
+        weight: 1,
+      });
+
+      rounds = await getEventRounds(event.id);
+    } catch (e) {
+      console.error("Auto-initializing round 1 failed:", e);
+    }
+  }
+
   const { roster } = await getAttendanceRoster(event.id);
 
   // Get the active round (JUDGING status) to check judge assignments
@@ -55,7 +105,7 @@ export default async function JudgePage({ params }: Params) {
   }
 
   return (
-    <main className="container" style={{ paddingTop: "var(--spacing-md)", paddingBottom: "var(--spacing-xxl)" }}>
+    <main style={{ width: "100%", maxWidth: "1280px", margin: "0 auto", padding: "12px 14px 80px" }}>
       <JudgeDashboard
         event={event}
         rounds={rounds}

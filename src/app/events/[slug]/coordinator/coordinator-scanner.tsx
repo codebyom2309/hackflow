@@ -77,7 +77,7 @@ export default function CoordinatorScanner({
   initialStats,
 }: CoordinatorScannerProps) {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<CoordinatorTab>("scan");
+  const [activeTab, setActiveTab] = useState<CoordinatorTab>("home");
   const [roster, setRoster] = useState<RosterItem[]>(initialRoster);
   const [stats, setStats] = useState<AttendanceStats>(initialStats);
   const [search, setSearch] = useState("");

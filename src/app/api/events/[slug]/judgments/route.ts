@@ -43,7 +43,7 @@ export async function POST(request: Request, { params }: Params) {
     if (!event)
       return NextResponse.json({ error: "Event not found" }, { status: 404 });
 
-    await requireRole(session.user.id, event.id, "JUDGE");
+    await requireRole(session.user.id, event.id, "JUDGE", "ORGANIZER");
 
     const body = await request.json();
     const validated = submitSchema.parse(body);
@@ -69,7 +69,7 @@ export async function DELETE(request: Request, { params }: Params) {
     if (!event)
       return NextResponse.json({ error: "Event not found" }, { status: 404 });
 
-    await requireRole(session.user.id, event.id, "JUDGE");
+    await requireRole(session.user.id, event.id, "JUDGE", "ORGANIZER");
 
     const body = await request.json();
     const validated = undoSchema.parse(body);

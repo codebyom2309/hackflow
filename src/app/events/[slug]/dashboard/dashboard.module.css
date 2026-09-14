@@ -1545,3 +1545,252 @@
   line-height: 1.4;
 }
 
+/* ==========================================================================
+   MOBILE RESPONSIVENESS OVERHAUL (SMARTPHONES & TABLETS)
+   ========================================================================== */
+@media (max-width: 640px) {
+  .container {
+    padding: 12px 12px 72px;
+    gap: 14px;
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  .container::before {
+    width: 260px;
+    height: 260px;
+    right: -30px;
+    top: -40px;
+  }
+
+  .container::after {
+    width: 240px;
+    height: 240px;
+    left: -30px;
+    bottom: 20px;
+  }
+
+  /* App Header */
+  .appHeader {
+    padding: 12px 14px;
+    gap: 10px;
+    border-radius: var(--rounded-lg);
+    width: 100%;
+  }
+
+  .appBrand {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .appHeaderActions {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .deskQuickPill,
+  .noDeskBadge {
+    flex: 1;
+    text-align: center;
+    padding: 8px 10px;
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .supportButton {
+    flex: 1;
+    text-align: center;
+    padding: 8px 10px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  /* Navigation Bar */
+  .navBar {
+    padding: 4px 6px;
+    gap: 4px;
+    border-radius: var(--rounded-pill);
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .navBar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .navTab {
+    padding: 8px 13px;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  /* Banner */
+  .banner {
+    padding: 20px 16px;
+    gap: 14px;
+    border-radius: var(--rounded-lg);
+    width: 100%;
+  }
+
+  .teamTitle {
+    font-size: 24px;
+    word-break: break-word;
+  }
+
+  .passCardBtn {
+    width: 100%;
+    text-align: center;
+    padding: 12px;
+    font-size: 13px;
+  }
+
+  /* Grids */
+  .quickGrid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .metricCard {
+    padding: 16px 14px;
+    border-radius: var(--rounded-lg);
+    width: 100%;
+  }
+
+  .hubActionsGrid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .hubActionCard {
+    padding: 14px 16px;
+    border-radius: var(--rounded-lg);
+    width: 100%;
+  }
+
+  /* Team Roster */
+  .teamCard {
+    padding: 18px 14px;
+    gap: 14px;
+    border-radius: var(--rounded-lg);
+    width: 100%;
+  }
+
+  .memberRow {
+    padding: 12px 14px;
+    border-radius: var(--rounded-md);
+    width: 100%;
+    gap: 10px;
+  }
+
+  .memberLeft {
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .memberAvatar {
+    width: 38px;
+    height: 38px;
+    font-size: 14px;
+  }
+
+  .memberInfo {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .memberName {
+    font-size: 13px;
+    flex-wrap: wrap;
+    word-break: break-word;
+  }
+
+  .memberEmail {
+    font-size: 11px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 180px;
+  }
+
+  /* Project Deliverables Form */
+  .projectCard {
+    padding: 18px 14px;
+    gap: 16px;
+    border-radius: var(--rounded-lg);
+    width: 100%;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .modalSubmitBtn {
+    width: 100%;
+    padding: 12px;
+    font-size: 13px;
+    text-align: center;
+    justify-content: center;
+  }
+
+  /* Universal QR Pass */
+  .qrCard {
+    padding: 24px 16px;
+    max-width: 100%;
+    width: 100%;
+    border-radius: var(--rounded-xl);
+    gap: 16px;
+  }
+
+  .qrTeamName {
+    font-size: 24px;
+  }
+
+  .qrImage {
+    width: min(220px, 68vw);
+    height: min(220px, 68vw);
+  }
+
+  .downloadPassBtn {
+    width: 100%;
+    text-align: center;
+    padding: 12px;
+  }
+
+  /* Help & Announcements */
+  .helpThreadCard {
+    padding: 14px 14px;
+    border-radius: var(--rounded-lg);
+    width: 100%;
+  }
+
+  .announcementCard {
+    padding: 14px 14px;
+    border-radius: var(--rounded-lg);
+    width: 100%;
+  }
+
+  .scheduleItem {
+    padding: 14px 12px;
+    gap: 10px;
+    border-radius: var(--rounded-lg);
+    width: 100%;
+  }
+
+  .modal {
+    width: 94vw;
+    max-width: 440px;
+    padding: 20px 16px;
+  }
+}
+
