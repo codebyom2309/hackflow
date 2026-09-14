@@ -25,14 +25,40 @@ export default async function JudgePage({ params }: Params) {
   const event = await getEventBySlug(slug);
   if (!event) redirect("/events");
 
-  try {
-    await requireRole(session.user.id, event.id, "JUDGE", "ORGANIZER");
-  } catch (err) {
-    if (err instanceof AuthError) {
-      const userRole = (await getUserEventRole(session.user.id, event.id)) || "PARTICIPANT";
-      redirect(`/unauthorized?role=${userRole}&required=JUDGE&slug=${slug}`);
+  let isOwner = event.organizerId === session.user.id;
+  if (!isOwner && session.user.email) {
+    try {
+      const { users } = await import("@/lib/db/schema/users");
+      const { eq } = await import("drizzle-orm");
+      const { db } = await import("@/lib/db");
+      const owner = await db.query.users.findFirst({
+        where: eq(users.id, event.organizerId),
+      });
+      if (owner?.email && owner.email.toLowerCase() === session.user.email.toLowerCase()) {
+        isOwner = true;
+      }
+    } catch {
+      // ignore
     }
-    throw err;
+  }
+
+  if (!isOwner) {
+    try {
+      await requireRole(session.user.id, event.id, "JUDGE", "ORGANIZER");
+    } catch (err: any) {
+      if (err?.digest?.startsWith?.("NEXT_REDIRECT")) {
+        throw err;
+      }
+      try {
+        const userRole = (await getUserEventRole(session.user.id, event.id)) || "PARTICIPANT";
+        redirect(`/unauthorized?role=${userRole}&required=JUDGE&slug=${slug}`);
+      } catch (redirectErr: any) {
+        if (redirectErr?.digest?.startsWith?.("NEXT_REDIRECT")) {
+          throw redirectErr;
+        }
+        redirect(`/events/${slug}`);
+      }
+    }
   }
 
   let rounds = await getEventRounds(event.id);
@@ -86,7 +112,18 @@ export default async function JudgePage({ params }: Params) {
     }
   }
 
-  const { roster } = await getAttendanceRoster(event.id);
+  let safeRoster: any[] = [];
+  try {
+    const attendanceData = await getAttendanceRoster(event.id);
+    if (attendanceData?.roster) {
+      safeRoster = attendanceData.roster.map((t) => ({
+        ...t,
+        checkedInAt: t.checkedInAt ? new Date(t.checkedInAt).toISOString() : null,
+      }));
+    }
+  } catch (err) {
+    console.error("Failed to load roster in judge page:", err);
+  }
 
   // Get the active round (JUDGING status) to check judge assignments
   const activeRound = rounds.find((r) => r.status === "JUDGING") || rounds[0] || null;
@@ -96,7 +133,7 @@ export default async function JudgePage({ params }: Params) {
   if (activeRound) {
     try {
       const assignments = await getJudgeAssignments(session.user.id, activeRound.id);
-      if (assignments.length > 0) {
+      if (assignments && assignments.length > 0) {
         assignedTeamIds = assignments.map((a) => a.teamId);
       }
     } catch {
@@ -104,12 +141,25 @@ export default async function JudgePage({ params }: Params) {
     }
   }
 
+  const safeRounds = (rounds || []).map((r) => ({
+    id: r.id,
+    roundNumber: r.roundNumber,
+    title: r.title || `Round ${r.roundNumber}`,
+    status: r.status,
+  }));
+
+  const safeEvent = {
+    id: event.id,
+    title: event.title || "Hackathon",
+    slug: event.slug,
+  };
+
   return (
     <main style={{ width: "100%", maxWidth: "1280px", margin: "0 auto", padding: "12px 14px 80px" }}>
       <JudgeDashboard
-        event={event}
-        rounds={rounds}
-        roster={roster}
+        event={safeEvent}
+        rounds={safeRounds}
+        roster={safeRoster}
         assignedTeamIds={assignedTeamIds}
       />
     </main>

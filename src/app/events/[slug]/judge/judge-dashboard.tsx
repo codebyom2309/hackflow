@@ -98,9 +98,10 @@ export default function JudgeDashboard({
 
   // Filter roster by assignments if present
   const baseRoster = useMemo(() => {
+    const list = Array.isArray(roster) ? roster : [];
     return assignedTeamIds !== null
-      ? roster.filter((t) => assignedTeamIds.includes(t.teamId))
-      : roster;
+      ? list.filter((t) => assignedTeamIds.includes(t.teamId))
+      : list;
   }, [assignedTeamIds, roster]);
 
   // Refresh judge progress
@@ -269,9 +270,9 @@ export default function JudgeDashboard({
       const q = search.toLowerCase().trim();
       list = list.filter(
         (t) =>
-          t.teamName.toLowerCase().includes(q) ||
-          t.teamId.toLowerCase().includes(q) ||
-          (t.desk && (t.desk.roomName.toLowerCase().includes(q) || String(t.desk.deskNumber).includes(q))) ||
+          t.teamName?.toLowerCase().includes(q) ||
+          t.teamId?.toLowerCase().includes(q) ||
+          (t.desk && (t.desk.roomName?.toLowerCase().includes(q) || String(t.desk.deskNumber).includes(q))) ||
           (t.projectName && t.projectName.toLowerCase().includes(q))
       );
     }
@@ -474,6 +475,26 @@ export default function JudgeDashboard({
           </span>
         </div>
       </div>
+
+      {/* 2.5. EVALUATION COMPLETION PROGRESS */}
+      {baseRoster.length > 0 && (
+        <div className={styles.progressCard}>
+          <div className={styles.progressHeader}>
+            <span>Evaluation Progress</span>
+            <span className={styles.progressRate}>
+              {Math.round((evaluatedIds.size / baseRoster.length) * 100)}% Complete
+            </span>
+          </div>
+          <div className={styles.progressBarTrack}>
+            <div
+              className={styles.progressBarFill}
+              style={{
+                width: `${Math.min(100, Math.round((evaluatedIds.size / baseRoster.length) * 100))}%`,
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* 3. ROSTER FILTER TABS & SEARCH */}
       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
@@ -841,6 +862,44 @@ export default function JudgeDashboard({
             </div>
           </div>
           </div>
+        </div>
+      )}
+
+      {/* 6. MOBILE STICKY BOTTOM BAR */}
+      {!evalSheet && (
+        <div className={styles.bottomBar}>
+          <button
+            type="button"
+            className={`${styles.bottomBarItem} ${activeFilter === "pending" ? styles.bottomBarActive : ""}`}
+            onClick={() => setActiveFilter("pending")}
+          >
+            <span className={styles.bottomBarIcon}>⏳</span>
+            <span>Pending ({Math.max(0, pendingCount)})</span>
+          </button>
+          <button
+            type="button"
+            className={`${styles.bottomBarItem} ${activeFilter === "all" ? styles.bottomBarActive : ""}`}
+            onClick={() => setActiveFilter("all")}
+          >
+            <span className={styles.bottomBarIcon}>📋</span>
+            <span>All ({baseRoster.length})</span>
+          </button>
+          <button
+            type="button"
+            className={`${styles.bottomBarItem} ${activeFilter === "evaluated" ? styles.bottomBarActive : ""}`}
+            onClick={() => setActiveFilter("evaluated")}
+          >
+            <span className={styles.bottomBarIcon}>✅</span>
+            <span>Done ({evaluatedIds.size})</span>
+          </button>
+          <button
+            type="button"
+            className={`${styles.bottomBarItem} ${activeFilter === "scan" ? styles.bottomBarActive : ""}`}
+            onClick={() => setActiveFilter("scan")}
+          >
+            <span className={styles.bottomBarIcon}>📷</span>
+            <span>Scan QR</span>
+          </button>
         </div>
       )}
 

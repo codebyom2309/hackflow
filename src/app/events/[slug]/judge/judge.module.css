@@ -141,6 +141,57 @@
   color: #f59e0b;
 }
 
+/* Progress Tracker Bar */
+.progressCard {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--rounded-xl);
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: var(--shadow-sm);
+}
+
+.progressHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.progressRate {
+  font-size: 13px;
+  font-weight: 800;
+  color: #8b5cf6;
+}
+
+.progressBarTrack {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  position: relative;
+}
+
+:global([data-theme="night"]) .progressBarTrack {
+  background: rgba(15, 23, 42, 0.6);
+}
+
+.progressBarFill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #8b5cf6 0%, #6366f1 50%, #3b82f6 100%);
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.5);
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 /* =========================================
    Roster Filters & Search
    ========================================= */
@@ -923,3 +974,66 @@
 .undoBtn:hover {
   opacity: 0.9;
 }
+
+/* =========================================
+   Mobile Sticky Bottom Navigation Bar
+   ========================================= */
+.bottomBar {
+  display: none;
+}
+
+@media (max-width: 650px) {
+  .container {
+    padding-bottom: 84px;
+  }
+
+  .bottomBar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--color-canvas);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--glass-border);
+    padding: 6px 4px calc(8px + env(safe-area-inset-bottom));
+    z-index: 900;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.35);
+  }
+
+  .bottomBarItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: transparent;
+    border: none;
+    color: var(--color-ink-muted);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 4px 2px;
+    cursor: pointer;
+    border-radius: 8px;
+    user-select: none;
+    position: relative;
+    transition: color var(--transition-fast);
+  }
+
+  .bottomBarIcon {
+    font-size: 18px;
+    transition: transform var(--transition-fast);
+  }
+
+  .bottomBarActive {
+    color: #a78bfa;
+    font-weight: 700;
+  }
+
+  .bottomBarActive .bottomBarIcon {
+    transform: scale(1.15);
+  }
+}
+

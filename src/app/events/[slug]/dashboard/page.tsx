@@ -70,15 +70,31 @@ export default async function ParticipantDashboardPage({ params }: Params) {
     // Graceful fallback
   }
 
+  const safeEvent = {
+    id: event.id,
+    title: event.title,
+    slug: event.slug,
+    status: event.status,
+    participantNotice: event.participantNotice,
+    eventStarts: event.eventStarts ? new Date(event.eventStarts).toISOString() : null,
+    eventEnds: event.eventEnds ? new Date(event.eventEnds).toISOString() : null,
+    participantExperienceConfig: event.participantExperienceConfig,
+  };
+
+  const safeCertificates = certificates.map((c) => ({
+    ...c,
+    generatedAt: c.generatedAt ? new Date(c.generatedAt).toISOString() : null,
+  }));
+
   return (
     <main style={{ width: "100%", minHeight: "100vh" }}>
       <ParticipantDashboard
-        event={event}
+        event={safeEvent}
         team={reg.team}
         members={reg.members}
         desk={reg.desk}
         qrDataUrl={qrDataUrl}
-        certificates={certificates}
+        certificates={safeCertificates as any}
         initialHelpRequests={initialHelpRequests}
       />
     </main>

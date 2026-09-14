@@ -614,14 +614,13 @@
   margin: 2px 0 0;
 }
 
-/* 8. Modern QR Pass */
 .qrCard {
-  background: rgba(255, 255, 255, 0.78);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.85);
-  border-radius: var(--rounded-xl);
-  padding: 32px 24px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(28px) saturate(200%);
+  -webkit-backdrop-filter: blur(28px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  border-radius: 24px;
+  padding: 34px 26px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -629,13 +628,35 @@
   gap: 20px;
   max-width: 440px;
   margin: 0 auto;
-  box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 24px 60px -15px rgba(0, 0, 0, 0.12), 0 0 30px rgba(59, 130, 246, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.qrCard::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
 }
 
 :global([data-theme="night"]) .qrCard {
-  background: rgba(18, 24, 38, 0.8);
+  background: rgba(18, 24, 38, 0.88);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 24px 60px -15px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  box-shadow: 0 28px 70px -15px rgba(0, 0, 0, 0.7), 0 0 30px rgba(99, 102, 241, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.qrDeskPending {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  padding: 4px 12px;
+  border-radius: var(--rounded-pill);
 }
 
 .qrHeader {
@@ -1793,4 +1814,79 @@
     padding: 20px 16px;
   }
 }
+
+/* =========================================
+   Mobile Floating Bottom Navigation Dock
+   ========================================= */
+.bottomBar {
+  display: none;
+}
+
+@media (max-width: 650px) {
+  .container {
+    padding-bottom: 84px;
+  }
+
+  .bottomBar {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--color-canvas);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-top: 1px solid var(--glass-border);
+    padding: 6px 4px calc(8px + env(safe-area-inset-bottom));
+    z-index: 900;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.35);
+  }
+
+  .bottomBarItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: transparent;
+    border: none;
+    color: var(--color-ink-muted);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 4px 2px;
+    cursor: pointer;
+    border-radius: 8px;
+    user-select: none;
+    position: relative;
+    transition: color var(--transition-fast);
+  }
+
+  .bottomBarIcon {
+    font-size: 18px;
+    transition: transform var(--transition-fast);
+  }
+
+  .bottomBarActive {
+    color: #3b82f6;
+    font-weight: 700;
+  }
+
+  .bottomBarActive .bottomBarIcon {
+    transform: scale(1.15);
+  }
+
+  .bottomBarBadge {
+    position: absolute;
+    top: 2px;
+    right: calc(50% - 14px);
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 9px;
+    font-weight: 800;
+    padding: 1px 5px;
+    border-radius: 999px;
+  }
+}
+
 

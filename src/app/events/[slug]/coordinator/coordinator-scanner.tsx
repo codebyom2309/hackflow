@@ -73,13 +73,15 @@ const CATEGORY_ICONS: Record<string, string> = {
 
 export default function CoordinatorScanner({
   event,
-  initialRoster,
-  initialStats,
+  initialRoster = [],
+  initialStats = { total: 0, checkedIn: 0, pending: 0, rate: 0 },
 }: CoordinatorScannerProps) {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<CoordinatorTab>("home");
-  const [roster, setRoster] = useState<RosterItem[]>(initialRoster);
-  const [stats, setStats] = useState<AttendanceStats>(initialStats);
+  const [roster, setRoster] = useState<RosterItem[]>(Array.isArray(initialRoster) ? initialRoster : []);
+  const [stats, setStats] = useState<AttendanceStats>(
+    initialStats || { total: 0, checkedIn: 0, pending: 0, rate: 0 }
+  );
   const [search, setSearch] = useState("");
 
   // Scan state
@@ -176,7 +178,7 @@ export default function CoordinatorScanner({
               ...prev,
               checkedIn: prev.checkedIn + 1,
               pending: Math.max(0, prev.pending - 1),
-              rate: ((prev.checkedIn + 1) / prev.total) * 100,
+              rate: prev.total > 0 ? ((prev.checkedIn + 1) / prev.total) * 100 : 0,
             }));
           }
         } else {
@@ -262,7 +264,7 @@ export default function CoordinatorScanner({
           ...prev,
           checkedIn: prev.checkedIn + 1,
           pending: Math.max(0, prev.pending - 1),
-          rate: ((prev.checkedIn + 1) / prev.total) * 100,
+          rate: prev.total > 0 ? ((prev.checkedIn + 1) / prev.total) * 100 : 0,
         }));
       } else {
         toast.error(json.error || "Manual check-in failed");
@@ -331,13 +333,14 @@ export default function CoordinatorScanner({
 
   // Filtered roster for search
   const filteredRoster = useMemo(() => {
-    if (!search.trim()) return roster;
+    const list = Array.isArray(roster) ? roster : [];
+    if (!search.trim()) return list;
     const q = search.toLowerCase().trim();
-    return roster.filter(
+    return list.filter(
       (t) =>
-        t.teamName.toLowerCase().includes(q) ||
-        t.teamId.toLowerCase().includes(q) ||
-        (t.desk && (t.desk.roomName.toLowerCase().includes(q) || String(t.desk.deskNumber).includes(q))) ||
+        t.teamName?.toLowerCase().includes(q) ||
+        t.teamId?.toLowerCase().includes(q) ||
+        (t.desk && (t.desk.roomName?.toLowerCase().includes(q) || String(t.desk.deskNumber).includes(q))) ||
         (t.college && t.college.toLowerCase().includes(q))
     );
   }, [roster, search]);
@@ -345,7 +348,7 @@ export default function CoordinatorScanner({
   // Venue room-by-room aggregation
   const roomsMap = useMemo(() => {
     const map = new Map<string, { total: number; checkedIn: number }>();
-    roster.forEach((t) => {
+    (Array.isArray(roster) ? roster : []).forEach((t) => {
       const room = t.desk?.roomName || "Unassigned";
       const current = map.get(room) || { total: 0, checkedIn: 0 };
       current.total++;
@@ -357,19 +360,20 @@ export default function CoordinatorScanner({
 
   // Filtered help requests
   const filteredHelp = useMemo(() => {
+    const list = Array.isArray(helpRequests) ? helpRequests : [];
     if (helpFilter === "URGENT") {
-      return helpRequests.filter((r) => r.priority === "URGENT" || r.priority === "HIGH");
+      return list.filter((r) => r.priority === "URGENT" || r.priority === "HIGH");
     }
     if (helpFilter === "ACTIVE") {
-      return helpRequests.filter((r) => r.status !== "RESOLVED" && r.status !== "CLOSED");
+      return list.filter((r) => r.status !== "RESOLVED" && r.status !== "CLOSED");
     }
     if (helpFilter === "RESOLVED") {
-      return helpRequests.filter((r) => r.status === "RESOLVED");
+      return list.filter((r) => r.status === "RESOLVED");
     }
-    return helpRequests;
+    return list;
   }, [helpRequests, helpFilter]);
 
-  const unresolvedCount = helpRequests.filter((r) => r.status !== "RESOLVED").length;
+  const unresolvedCount = (Array.isArray(helpRequests) ? helpRequests : []).filter((r) => r.status !== "RESOLVED").length;
 
   return (
     <div className={styles.container}>
@@ -377,6 +381,9 @@ export default function CoordinatorScanner({
       <header className={styles.header}>
         <div className={styles.brandRow}>
           <span className={styles.roleBadge}>STAFF OPERATIONS</span>
+          <span className={styles.livePulse}>
+            <span className={styles.liveDot} /> LIVE VENUE DESK
+          </span>
           <span className={styles.personalBadge}>⚡ Scanned: {personalScans}</span>
         </div>
         <h1 className={styles.title}>{event.title}</h1>
@@ -436,24 +443,44 @@ export default function CoordinatorScanner({
             <div className={styles.statBox}>
               <span className={styles.statLabel}>Checked In</span>
               <span className={styles.statValue} style={{ color: "#34d399" }}>
-                {stats.checkedIn}
+                {stats?.checkedIn ?? 0}
               </span>
             </div>
             <div className={styles.statBox}>
               <span className={styles.statLabel}>Pending</span>
               <span className={styles.statValue} style={{ color: "#fbbf24" }}>
-                {stats.pending}
+                {stats?.pending ?? 0}
               </span>
             </div>
             <div className={styles.statBox}>
               <span className={styles.statLabel}>Total Teams</span>
-              <span className={styles.statValue}>{stats.total}</span>
+              <span className={styles.statValue}>{stats?.total ?? 0}</span>
             </div>
             <div className={styles.statBox}>
               <span className={styles.statLabel}>Attendance Rate</span>
-              <span className={styles.statValue}>{stats.rate.toFixed(0)}%</span>
+              <span className={styles.statValue}>{Number(stats?.rate ?? 0).toFixed(0)}%</span>
             </div>
           </div>
+
+          {/* Attendance Progress Bar */}
+          {Number(stats?.total || 0) > 0 && (
+            <div className={styles.progressCard}>
+              <div className={styles.progressHeader}>
+                <span>Check-in Completion</span>
+                <span className={styles.progressRate}>
+                  {Number(stats?.rate ?? 0).toFixed(0)}% Verified
+                </span>
+              </div>
+              <div className={styles.progressBarTrack}>
+                <div
+                  className={styles.progressBarFill}
+                  style={{
+                    width: `${Math.min(100, Math.max(0, Number(stats?.rate ?? 0)))}%`,
+                  }}
+                />
+              </div>
+            </div>
+          )}
 
           {/* Quick Action Shortcuts */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--spacing-sm)" }}>

@@ -882,9 +882,13 @@ export default function ParticipantDashboard({
             <div className={styles.qrCardHeader}>
               <span className={styles.qrCardBadge}>Universal Access Pass</span>
               <h2 className={styles.qrTeamName}>{team.name}</h2>
-              {desk && (
+              {desk ? (
                 <div className={styles.qrDeskHighlight}>
                   📍 Room {desk.roomNumber} ({desk.roomName}) · Desk #{desk.deskNumber}
+                </div>
+              ) : (
+                <div className={styles.qrDeskPending}>
+                  ⏳ Desk Allocation Pending · Physical Check-in Required
                 </div>
               )}
             </div>
@@ -1290,6 +1294,53 @@ export default function ParticipantDashboard({
           </div>
         </div>
       )}
+
+      {/* 4. MOBILE STICKY BOTTOM DOCK */}
+      <div className={styles.bottomBar}>
+        <button
+          type="button"
+          className={`${styles.bottomBarItem} ${activeTab === "home" ? styles.bottomBarActive : ""}`}
+          onClick={() => setActiveTab("home")}
+        >
+          <span className={styles.bottomBarIcon}>🏠</span>
+          <span>Home</span>
+        </button>
+        <button
+          type="button"
+          className={`${styles.bottomBarItem} ${activeTab === "team" ? styles.bottomBarActive : ""}`}
+          onClick={() => setActiveTab("team")}
+        >
+          <span className={styles.bottomBarIcon}>👥</span>
+          <span>Team</span>
+        </button>
+        <button
+          type="button"
+          className={`${styles.bottomBarItem} ${activeTab === "project" ? styles.bottomBarActive : ""}`}
+          onClick={() => setActiveTab("project")}
+        >
+          <span className={styles.bottomBarIcon}>🚀</span>
+          <span>Project</span>
+        </button>
+        <button
+          type="button"
+          className={`${styles.bottomBarItem} ${activeTab === "pass" ? styles.bottomBarActive : ""}`}
+          onClick={() => setActiveTab("pass")}
+        >
+          <span className={styles.bottomBarIcon}>🎫</span>
+          <span>Pass</span>
+        </button>
+        <button
+          type="button"
+          className={`${styles.bottomBarItem} ${activeTab === "support" ? styles.bottomBarActive : ""}`}
+          onClick={() => setActiveTab("support")}
+        >
+          <span className={styles.bottomBarIcon}>🆘</span>
+          <span>Help</span>
+          {helpRequests.length > 0 && (
+            <span className={styles.bottomBarBadge}>{helpRequests.length}</span>
+          )}
+        </button>
+      </div>
 
       {/* Certificate Canvas Modal */}
       {activeCert && (
